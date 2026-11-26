@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speaking Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a calm, professional coaching tool for adult learners — precise, encouraging, no childish touches.
+IDEA: a teacher's correction notebook — the student's words in ink, the teacher's corrections in red pen.
+PICTURE: the marked-up answer itself: struck-out words, handwritten red corrections, highlighter on better words.
+COLOUR and TYPE: white paper, ink black, red-pen accent, highlighter yellow; Manrope UI, Source Serif for speech, Caveat for the pen.
+LAYOUT: ink sidebar of students on the left, the notebook page in the middle; stacks under 860px.
+*/
+:root{color-scheme:light dark;
+--paper:light-dark(#ffffff,#16181e);--page:light-dark(#f3f3f1,#0f1115);--ink:light-dark(#16181d,#eceef3);--soft:light-dark(#5d6270,#a3a9b8);
+--line:light-dark(#e4e4e0,#2a2e38);--pen:light-dark(#d33a2c,#ff6b5c);--hi:light-dark(#ffe45c,#7a6510);--ok:light-dark(#1d7a4f,#53d39a);
+--side:light-dark(#16181d,#0a0b0e);--sideInk:#f2f3f5;--chip:light-dark(#f1f1ee,#22262f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.55 Manrope,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{margin:0;line-height:1.1;text-wrap:balance;font-weight:800}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:12px;min-height:44px;padding:9px 16px;background:var(--chip);color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.pri{background:var(--pen);color:#fff}.dark{background:var(--ink);color:var(--paper)}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:9px 12px;min-height:44px;width:100%}
+label{font-weight:800;font-size:14px;display:block;margin-bottom:4px}
+.shell{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh}
+aside{background:var(--side);color:var(--sideInk);padding:20px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.brand svg{flex:none}.brand h1{font-size:22px}.brand small{display:block;font-weight:600;opacity:.7;font-size:13px}
+.side-h{font-size:13px;font-weight:800;opacity:.7;margin:6px 0 8px}
+.stu{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;background:transparent;color:var(--sideInk);padding:10px;border-radius:14px;margin-bottom:4px}
+.stu:hover{background:rgba(255,255,255,.07)}.stu.on{background:rgba(255,255,255,.13)}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#d33a2c;color:#fff;font-weight:800}
+.stu b{display:block;font-size:16px}.stu span{font-size:13px;opacity:.7;font-weight:600}
+.newbtn{width:100%;background:rgba(255,255,255,.12);color:#fff;margin-top:8px}
+.store{font-size:12px;opacity:.6;margin-top:16px;font-weight:600}
+main{padding:clamp(18px,3vw,40px);max-width:1080px;width:100%}
+.sheet{background:var(--paper);border-radius:20px;padding:clamp(18px,3vw,34px);box-shadow:0 1px 0 var(--line),0 12px 40px rgba(0,0,0,.06);margin-bottom:20px;position:relative}
+.screen{display:none}.screen.on{display:block}
+.title{font-size:clamp(30px,4vw,44px);margin-bottom:6px}
+.lead{color:var(--soft);max-width:66ch;margin:0 0 18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--chip);color:var(--soft);white-space:nowrap}
+.lv{background:var(--ink);color:var(--paper)}
+/* hero (empty state) */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center}
+.demo{font:400 21px/1.7 "Source Serif 4",Georgia,serif;background:var(--paper);border-radius:18px;padding:22px;border:2px solid var(--line);position:relative}
+.demo .note{font:700 22px Caveat,cursive;color:var(--pen);transform:rotate(-3deg);display:inline-block;margin-top:6px}
+/* history */
+.hist{display:grid;gap:10px;margin-top:14px}
+.hitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--paper);text-align:left;width:100%;font-weight:600}
+.hitem .big{font:800 26px Manrope;width:56px;text-align:center}
+.hitem small{color:var(--soft);display:block}
+/* question picker */
+.qlist{display:grid;gap:8px;margin-top:10px}
+.qopt{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:12px;align-items:center;border:2px solid var(--line);border-radius:14px;padding:10px 14px;cursor:pointer;background:var(--paper)}
+.qopt input{width:22px;height:22px;min-height:0}
+.qopt .e{font-size:28px}.qopt.on{border-color:var(--pen)}
+.bands{display:flex;gap:8px;flex-wrap:wrap}
+.bands button.on{background:var(--ink);color:var(--paper)}
+/* task */
+.prog{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pd{width:34px;height:8px;border-radius:4px;background:var(--line)}.pd.done{background:var(--ok)}.pd.cur{background:var(--pen)}
+.prompt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;margin:14px 0 6px}
+.prompt .e{font-size:clamp(56px,8vw,84px);line-height:1}
+.prompt h2{font-size:clamp(24px,3.2vw,34px)}
+.prompt p{margin:6px 0 0;color:var(--soft)}
+.rec{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:16px 0 10px}
+.mic{width:72px;height:72px;border-radius:50%;background:var(--pen);color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 6px 0 rgba(0,0,0,.15)}
+.mic.live{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 14px rgba(211,58,44,.18)}}
+.clock{font:800 28px Manrope;font-variant-numeric:tabular-nums}
+.clock small{font-size:15px;color:var(--soft);font-weight:700}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;width:min(260px,60vw)}.bar span{display:block;height:100%;background:var(--pen);width:0}
+.modes{display:inline-flex;background:var(--chip);border-radius:14px;padding:4px;gap:4px;margin-top:16px}
+.modes button{background:transparent;min-height:40px}.modes button.on{background:var(--ink);color:var(--paper)}
+.typebox .rec,.typebox .rate{display:none}
+.partial{color:var(--soft);font-style:italic;min-height:1.4em;font-family:"Source Serif 4",serif}
+textarea.ans{font:400 20px/1.65 "Source Serif 4",Georgia,serif;min-height:170px;resize:vertical}
+.meta{display:flex;gap:16px;flex-wrap:wrap;color:var(--soft);font-size:14px;font-weight:700;margin-top:6px}
+.rate{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+.rate .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rate .grp b{font-size:14px;margin-right:4px}
+.rate button{min-width:44px;padding:6px 10px}.rate button.on{background:var(--ink);color:var(--paper)}
+.notice{background:light-dark(#fff7d1,#3a3210);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:700;margin:10px 0}
+.err{background:light-dark(#ffe9e6,#3d1814);color:var(--ink)}
+/* result */
+.marked{font:400 21px/1.9 "Source Serif 4",Georgia,serif;border-left:4px solid var(--pen);padding:4px 0 4px 18px;margin:8px 0}
+.marked del{color:var(--soft);text-decoration:line-through 2px var(--pen)}
+.marked ins{text-decoration:none;font:700 25px/1 Caveat,cursive;color:var(--pen);padding:0 2px;position:relative;top:-6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;margin-top:18px}
+.box{border:2px solid var(--line);border-radius:16px;padding:16px}
+.box h3{font-size:17px;margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ecard{border-top:1px solid var(--line);padding:10px 0}.ecard:first-of-type{border-top:0;padding-top:0}
+.ecard .fix{font-family:"Source Serif 4",serif;font-size:18px}
+.ecard .fix s{color:var(--soft);text-decoration-color:var(--pen)}.ecard .fix b{color:var(--pen);font-family:Caveat,cursive;font-size:24px}
+.ecard p{margin:2px 0 0;color:var(--soft);font-size:14px}
+.up{font-family:"Source Serif 4",serif;font-size:18px;padding:6px 0}.up mark{background:var(--hi);color:var(--ink);padding:0 4px;border-radius:3px}
+.up small{display:block;color:var(--soft);font-family:Manrope;font-size:13px}
+.scores{display:grid;gap:10px}
+.sc .l{display:flex;justify-content:space-between;font-weight:800;font-size:14px}
+.dots5{display:flex;gap:4px;margin-top:4px}.dots5 i{flex:1;height:8px;border-radius:4px;background:var(--line)}.dots5 i.f{background:var(--ink)}
+.cefr{font:800 54px/1 Manrope;letter-spacing:-.02em}
+.better{font:400 19px/1.7 "Source Serif 4",serif;background:light-dark(#fffbe3,#26220f);border-radius:12px;padding:12px 14px}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* feedback */
+.fbhead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:center}
+.stamp{width:130px;height:130px;border-radius:50%;border:5px solid var(--pen);color:var(--pen);display:grid;place-items:center;text-align:center;transform:rotate(-8deg)}
+.stamp b{font:800 46px/1 Manrope;display:block}.stamp small{font:700 20px Caveat,cursive}
+.fbhead h2{font-size:clamp(26px,3.4vw,38px)}
+.pat{border-top:1px solid var(--line);padding:12px 0}.pat:first-child{border-top:0;padding-top:0}
+.pat h3{font-size:17px}.pat .ex{font-family:"Source Serif 4",serif;margin:4px 0}.pat p{margin:0;color:var(--soft)}
+ol.act{margin:0;padding-left:1.3em}ol.act li{margin:6px 0;font-weight:600}
+.letter{font:400 19px/1.75 "Source Serif 4",serif;white-space:pre-wrap}
+.sig{font:700 26px Caveat,cursive;color:var(--pen)}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:20;padding:16px}.dlg.on{display:grid}
+.dlg .sheet{width:min(560px,100%);margin:0}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--paper);border-radius:12px;padding:10px 16px;font-weight:700;display:none;z-index:30}.toast.on{display:block}
+@media(max-width:860px){.shell{grid-template-columns:1fr}aside{position:static;height:auto}.hero,.fbhead{grid-template-columns:1fr}.stamp{margin:0 auto}#stuList{display:flex;overflow-x:auto;gap:6px}.stu{min-width:200px}}
+@media(prefers-reduced-motion:reduce){.mic.live,.spin{animation:none}}
+
+/* assessment builder */
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;margin-top:12px}
+.type{display:grid;gap:4px;text-align:left;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font-weight:600;color:var(--ink)}
+.type .e{font-size:30px}.type b{font-size:17px}.type small{color:var(--soft);font-size:13px;font-weight:600}
+.type.on{border-color:var(--pen);box-shadow:0 0 0 3px light-dark(#fde3df,#3d1814)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips button.on{background:var(--ink);color:var(--paper)}
+.plan{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px;font-weight:700;font-size:14px}
+.plan .tag{font-size:13px}
+h4{margin:20px 0 6px;font-size:15px}
+/* stepper */
+.stepper{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.step{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--chip);font-weight:800;font-size:13px;color:var(--soft)}
+.step.cur{background:var(--pen);color:#fff}.step.done{background:light-dark(#e2f4ea,#12301f);color:var(--ok)}
+.sechead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.sechead h2{font-size:clamp(26px,3.4vw,36px)}
+/* grammar */
+.gq{font:400 clamp(22px,3vw,30px)/1.5 "Source Serif 4",Georgia,serif;margin:18px 0}
+.gq u{text-decoration:none;border-bottom:3px solid var(--pen);padding:0 1.5em}
+.gopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.gopts button{font:600 19px "Source Serif 4",serif;min-height:56px;border:2px solid var(--line);background:var(--paper)}
+.gopts button:hover{border-color:var(--ink)}
+.meterrow{display:flex;gap:10px;align-items:center;color:var(--soft);font-weight:700;font-size:14px;margin-top:14px}
+.review{display:grid;gap:6px;margin-top:12px}
+.rv{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:10px;align-items:baseline;font-family:"Source Serif 4",serif;font-size:17px;border-top:1px solid var(--line);padding-top:6px}
+.rv .m{font-family:Manrope;font-weight:800}.rv .m.y{color:var(--ok)}.rv .m.n{color:var(--pen)}
+/* reading / listening */
+.rd{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:14px}
+.passage{font:400 19px/1.75 "Source Serif 4",Georgia,serif;background:light-dark(#fbfbf8,#1b1d24);border-radius:14px;padding:18px 20px;max-height:70vh;overflow:auto}
+.passage h3{font:700 22px Manrope;margin-bottom:8px}
+.passage p{margin:0 0 12px}
+.qs{display:grid;gap:14px}
+.qb{border:2px solid var(--line);border-radius:14px;padding:12px 14px}
+.qb .qt{font-weight:800;margin-bottom:8px}
+.qb .os{display:grid;gap:6px}
+.qb .os button{text-align:left;font-weight:600;border:2px solid transparent;min-height:42px}
+.qb .os button.sel{border-color:var(--ink);background:var(--paper)}
+.qb .os button.right{background:light-dark(#e2f4ea,#12301f);border-color:var(--ok)}
+.qb .os button.wrong{background:light-dark(#ffe9e6,#3d1814);border-color:var(--pen)}
+.qb .why{font-size:14px;color:var(--soft);margin-top:6px}
+.player{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--ink);color:var(--paper);border-radius:16px;padding:14px 18px;margin-top:14px}
+.player .play{width:60px;height:60px;border-radius:50%;background:var(--pen);color:#fff;padding:0;display:grid;place-items:center}
+.player .ctx{font-weight:700}.player small{opacity:.75;font-weight:700;display:block}
+.wave{display:flex;gap:3px;align-items:center;height:28px}.wave i{width:4px;border-radius:2px;background:var(--paper);opacity:.5;height:30%}
+.wave.on i{animation:wv 1s ease-in-out infinite}.wave.on i:nth-child(2n){animation-delay:.2s}.wave.on i:nth-child(3n){animation-delay:.4s}
+@keyframes wv{50%{height:100%;opacity:1}}
+.script{font:400 17px/1.7 "Source Serif 4",serif;margin-top:10px}.script b{font-family:Manrope}
+/* writing */
+.wtask{font:600 19px/1.6 "Source Serif 4",serif;background:light-dark(#fffbe3,#26220f);border-radius:14px;padding:14px 18px}
+textarea.wr{font:400 19px/1.7 "Source Serif 4",Georgia,serif;min-height:280px;resize:vertical}
+.wbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 0}
+/* result */
+.resline{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--chip);border-radius:14px;padding:14px 18px;margin-top:16px}
+.resline .cefr{font-size:40px}
+/* skill profile */
+.prof{display:grid;gap:12px;margin-top:6px}
+.pr{display:grid;grid-template-columns:130px minmax(0,1fr) 92px;gap:12px;align-items:center}
+.pr b{font-size:15px}
+.ladder{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.ladder i{height:22px;border-radius:5px;background:var(--line);font:800 11px/22px Manrope;text-align:center;font-style:normal;color:var(--soft)}
+.ladder i.f{background:var(--ink);color:var(--paper)}.ladder i.cur{background:var(--pen);color:#fff}
+.pr .v{font-weight:800;text-align:right;white-space:nowrap}.pr .v small{display:block;color:var(--soft);font-size:12px}
+@media(max-width:860px){.rd{grid-template-columns:1fr}.passage{max-height:none}.pr{grid-template-columns:90px minmax(0,1fr) 70px}}
+@media(prefers-reduced-motion:reduce){.wave.on i{animation:none}}
+/* single-page layout (no sidebar) */
+.shell{display:block;min-height:100vh}
+.topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--side);color:var(--sideInk);padding:12px max(3vw,16px)}
+.topbar .brand{margin:0;cursor:pointer}.topbar .brand h1{font-size:20px}
+.who{font-weight:800;margin-left:auto;font-size:16px}.who:not(:empty)::before{content:"Student: ";opacity:.65;font-weight:600}
+.topbar .store{margin:0}
+main{margin:0 auto}
+details.more{margin-top:14px}details.more summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--soft)}
+#recent{margin-top:10px}
+/* category navbar */
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);align-items:start;min-height:calc(100vh - 62px)}
+.catnav{background:var(--side);color:var(--sideInk);padding:18px 14px;align-self:stretch}
+.navh{font-size:13px;font-weight:800;opacity:.7;margin:0 4px 10px}
+.catb{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;width:100%;text-align:left;background:transparent;color:var(--sideInk);padding:12px;border-radius:14px;margin-bottom:6px;border:2px solid transparent}
+.catb:hover{background:rgba(255,255,255,.07)}.catb.on{background:rgba(255,255,255,.12);border-color:#d33a2c}
+.catb .ci{font-size:28px;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.catb b{display:block;font-size:16px}.catb small{display:block;font-size:12.5px;opacity:.7;font-weight:600;line-height:1.35}
+.navnote{font-size:12px;opacity:.6;font-weight:600;margin:14px 4px 0}
+/* grammar explanations */
+.rv2{border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+.rv2.n{border-color:light-dark(#f4c7c0,#5a2a24)}
+.rvh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rvh .m{font-weight:800;font-size:14px}.rvh .m.y{color:var(--ok)}.rvh .m.n{color:var(--pen)}
+.tag.concept{background:light-dark(#fff3c4,#3a3210);color:var(--ink)}
+.rvs{font:400 19px/1.5 "Source Serif 4",serif;margin-top:6px}.rvs b{color:var(--ok);font-weight:700}
+.rvp{font-size:14px;color:var(--soft);margin-top:2px}.rvp s{text-decoration-color:var(--pen)}
+.rvx{font-size:15px;margin-top:6px;font-weight:600}
+/* per-activity feedback */
+.fbmini{margin-top:22px;border:3px solid var(--ink);border-radius:18px;padding:16px 18px;background:var(--paper)}
+.fbmini h3{font-size:19px;margin-bottom:10px}
+.fbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.fbg p{margin:4px 0 0;font-weight:600}
+.prfb{margin:-6px 0 4px 142px;color:var(--soft);font-size:14px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.catnav{position:static;min-height:0}#catList{display:flex;gap:8px;overflow-x:auto}.catb{min-width:220px}.navnote{display:none}.prfb{margin-left:0}}
+.lvb{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;width:100%;text-align:left;background:transparent;color:var(--sideInk);padding:8px 10px;border-radius:12px;margin-bottom:4px;border:2px solid transparent;min-height:0}
+.lvb:hover{background:rgba(255,255,255,.07)}.lvb.on{background:rgba(255,255,255,.12);border-color:#d33a2c}
+.lvb .lc{width:40px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.14);font:800 15px Manrope}
+.lvb.on .lc{background:#d33a2c}
+.lvb b{display:block;font-size:14.5px}.lvb small{display:block;font-size:12px;opacity:.65;font-weight:600;line-height:1.3}
+.selected{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.und{display:inline-block;font-weight:800;font-size:14px;padding:4px 10px;border-radius:999px}
+.und.y{background:light-dark(#e2f4ea,#12301f);color:var(--ok)}.und.m{background:light-dark(#fff3c4,#3a3210);color:var(--ink)}.und.n{background:light-dark(#ffe9e6,#3d1814);color:var(--pen)}
+@media(max-width:860px){#lvList{display:flex;gap:6px;overflow-x:auto}.lvb{min-width:170px}}
+.lvnote{width:100%;background:var(--chip);border-radius:12px;padding:10px 14px;font-weight:600;font-size:14px;margin-bottom:6px}
+.prompt .e{letter-spacing:.04em}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar"><div class="brand" id="homeLink" role="button" tabindex="0" title="Home"><svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="5" width="28" height="32" rx="4" fill="#fff"/><path d="M9 14h16M9 20h16M9 26h10" stroke="#16181d" stroke-width="2.4" stroke-linecap="round"/><path d="M27 30 37 8l-4-2-10 22-1 6z" fill="#d33a2c"/></svg><div><h1>Speaking Coach</h1><small>Adult English assessment</small></div></div><span class="who" id="who"></span><span class="store" id="storeNote">Loading records…</span></header>
+<div class="layout">
+<nav class="catnav" aria-label="Category">
+  <div class="navh">Category</div>
+  <div id="catList"></div>
+  <div class="navh" style="margin-top:18px">Level</div>
+  <div id="lvList"></div>
+  <p class="navnote" id="navNote">Choose the category, then the level. Every test, text, writing task and speaking question is matched to them.</p>
+</nav>
+<main>
+  <!-- HOME -->
+  <section class="screen on" id="home">
+    <div class="sheet">
+      <div class="hero"><div>
+        <h2 class="title">Ready to assess?</h2>
+        <p class="lead">Type the student's name, choose an assessment below and press Start. Claude writes the tests, marks writing and speaking with a red pen, and writes a personalised report.</p>
+        <label for="nameIn">Student's name</label>
+        <div class="row"><input id="nameIn" placeholder="e.g. Anna Li" maxlength="40" autocomplete="off" style="flex:1 1 260px;font-size:19px"></div>
+        <div class="chips" id="recent"></div>
+        <details class="more"><summary>More details (optional)</summary>
+          <div class="grid2" style="margin-top:10px"><div><label for="fLang">Native language</label><input id="fLang" placeholder="e.g. Chinese (Mandarin)" maxlength="40"></div>
+          <div><label for="fNotes">Teacher notes</label><input id="fNotes" placeholder="e.g. works in marketing, drops articles" maxlength="200"></div></div>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="fBil" style="width:20px;height:20px;min-height:0"> Add a short summary in their native language to the report</label>
+        </details>
+      </div>
+      <div class="demo" aria-label="Example of a corrected answer">Yesterday I <del style="text-decoration:line-through 2px #d33a2c;color:var(--soft)">go</del> <ins style="text-decoration:none;font:700 25px Caveat,cursive;color:var(--pen)">went</ins> to <ins style="text-decoration:none;font:700 25px Caveat,cursive;color:var(--pen)">the</ins> office and I <del style="text-decoration:line-through 2px #d33a2c;color:var(--soft)">have discussed</del> <ins style="text-decoration:none;font:700 25px Caveat,cursive;color:var(--pen)">discussed</ins> the project with my boss.<br><span class="note">Past simple for finished time ✓ Great detail!</span></div></div>
+    </div>
+    <div class="sheet">
+      <div class="selected" id="selected"></div>
+      <h4>1 · Assessment type</h4><div class="types" id="types"></div>
+      <div id="skillPick"><h4>2 · Skill</h4><div class="chips" id="skills"></div></div>
+      <div id="qPick"><h4>Speaking questions</h4><p class="lead" style="margin:0">Pick 3–6. You can add follow-up questions during the session.</p><div class="qlist" id="qlist"></div>
+        <div class="row" style="margin-top:12px"><input id="customQ" placeholder="Or type your own question…" style="flex:1 1 300px"><button id="addCustom">Add question</button></div></div>
+      <div class="plan" id="plan"></div>
+      <div class="row" style="margin-top:18px"><button class="pri" id="startSess">Start →</button></div>
+    </div>
+    <div class="sheet" id="histSheet" hidden><h2 style="font-size:24px" id="histH">History</h2><div class="hist" id="hist"></div></div>
+  </section>
+
+  <!-- SECTION RUNNER (grammar / reading / listening / writing) -->
+  <section class="screen" id="sec"><div class="sheet" id="secSheet"></div></section>
+
+  <!-- SPEAKING TASK -->
+  <section class="screen" id="task"><div class="sheet">
+    <div class="stepper" id="stepper2"></div>
+    <div class="row" style="justify-content:space-between"><div class="prog" id="prog"></div><div class="row"><button id="toStudent">← Home</button><button class="dark" id="finishBtn">Finish speaking →</button></div></div>
+    <div class="prompt"><div class="e" id="tE"></div><div><span class="tag" id="tCat"></span><h2 id="tQ"></h2><p id="tHint"></p></div></div>
+    <div class="row"><button id="readQ">🔊 Read question</button></div>
+    <div class="modes" role="group" aria-label="How the student answers"><button id="mSpeak" class="on">🎙️ Speak</button><button id="mType">⌨️ Type</button></div>
+    <div class="rec">
+      <button class="mic" id="micBtn" aria-label="Start voice typing"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="2" width="8" height="13" rx="4" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div><div class="clock" id="clock">0:00 <small id="target"></small></div><div class="bar"><span id="barFill"></span></div></div>
+      <button id="timerBtn">Start timer</button>
+    </div>
+    <div class="notice" id="micNote" hidden></div>
+    <div class="partial" id="partial"></div>
+    <label for="ans" id="ansLabel">What the student said</label>
+    <textarea class="ans" id="ans"></textarea>
+    <div class="meta"><span id="wc">0 words</span><span id="fill"></span></div>
+    <div class="rate">
+      <div class="grp"><b>Pronunciation</b><span id="rPron"></span></div>
+      <div class="grp"><b>Fluency</b><span id="rFlu"></span></div>
+    </div>
+    <div class="row" style="margin-top:18px"><button class="pri" id="checkBtn">✍️ Correct with AI</button><button id="nextBtn">Next question →</button><button id="followBtn">Suggest a follow-up question</button></div>
+    <div id="aiOut"></div>
+  </div></section>
+
+  <!-- FEEDBACK -->
+  <section class="screen" id="feedback"><div id="fbOut"></div></section>
+</main>
+</div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="content.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const use=n=>(window.claude&&window.claude.use)?window.claude.use(n).catch(()=>null):Promise.resolve(null);
+const uid4=()=>Math.random().toString(36).slice(2,10);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let toastT;const toast=t=>{const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),3500)};
+const show=id=>{document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==id));window.scrollTo(0,0)};
+const C=window.COACH||{grammar:{},writing:{},speaking:{}};
+
+/* ---------- levels, categories, types ---------- */
+const LV=["A1","A2","B1","B2","C1","C2"];
+const li=l=>Math.max(0,LV.indexOf(String(l||"B1").slice(0,2)));
+const bandOf=l=>li(l)<2?"A":li(l)<4?"B":"C";
+const CATS={general:"General English",business:"Business English",ielts:"IELTS"};
+const CATDESC={general:"everyday life, travel, culture and social topics",business:"workplace emails, meetings, clients, reports and negotiations",ielts:"IELTS Academic/General exam style and topics"};
+const SK={grammar:["🧩","Grammar & vocabulary"],reading:["📖","Reading"],listening:["🎧","Listening"],writing:["✍️","Writing"],speaking:["🗣️","Speaking"]};
+const TYPES={
+ placement:{e:"🧭",n:"Placement test",d:"New student · all skills · starts at the chosen level and adapts · ~35 min",sec:["grammar","reading","listening","writing","speaking"]},
+ skills:{e:"🎯",n:"Skills check",d:"Focus on one skill · 10–25 min",sec:null},
+ progress:{e:"📈",n:"Progress check",d:"All skills at the chosen level, compared with last time · ~30 min",sec:["grammar","reading","listening","writing","speaking"]},
+ exam:{e:"🏁",n:"Exam practice",d:"Listening, reading, writing and speaking in the category's exam style",sec:["listening","reading","writing","speaking"]}
+};
+/* IELTS helpers */
+const pctBand=p=>p>=.95?8.5:p>=.88?8:p>=.8?7.5:p>=.72?7:p>=.64?6.5:p>=.56?6:p>=.48?5.5:p>=.4?5:p>=.3?4.5:4;
+const bandCefr=b=>b>=8.5?"C2":b>=7?"C1":b>=5.5?"B2":b>=4?"B1":"A2";
+const r5=x=>Math.round(x*2)/2;
+const lvBand=(l,p)=>Math.min(9,[3,4,5,6,7.5,8.5][li(l)]+(p>=.9?.5:p<.55&&p>=.4?-.5:0));
+const lvFromPct=(p,l)=>{const i=li(l);return LV[Math.max(0,p>=.7?i:p>=.4?i-1:i-2)]};
+
+/* ---------- state + storage ---------- */
+const st={students:[],cur:null,uid:null,col:null,type:"placement",cat:"general",skill:"speaking",lvl:"B1",sel:[],sess:null};
+const LSK="coach.students.v1";
+const saveLocal=()=>{try{localStorage.setItem(LSK,JSON.stringify(st.students))}catch(e){}};
+const loadLocal=()=>{try{return JSON.parse(localStorage.getItem(LSK)||"[]")}catch(e){return[]}};
+let writing=Promise.resolve();
+const persist=s=>{saveLocal();if(!st.col)return;const body=JSON.parse(JSON.stringify(s));
+ writing=writing.then(()=>st.col.doc(s.id).set(body)).catch(e=>{toast(e&&e.code=="quota_exceeded"?"Storage is full — delete old students.":"Couldn't save to your records — saved in this browser.")})};
+const fixGoal=s=>{if(!CATS[s.goal])s.goal=/business|work|interview/i.test(s.goal||"")?"business":/ielts|exam/i.test(s.goal||"")?"ielts":"general";return s};
+const initStore=async()=>{
+ const [db,user]=await Promise.all([use("db"),use("user")]);let id=null;try{id=user?await user.id():null}catch(e){}
+ if(db&&id){st.uid=id;st.col=db.collection("data/users/"+id);
+  const to=setTimeout(()=>{$("storeNote").textContent="Records are slow to load — showing this browser's copy."},10000);
+  try{const snap=await st.col.get();clearTimeout(to);const list=snap.docs.filter(d=>d.exists).map(d=>JSON.parse(JSON.stringify(d.data())));
+   if(list.length||!loadLocal().length)st.students=list;else{st.students=loadLocal();st.students.forEach(persist)}
+   $("storeNote").textContent="🔒 Records are saved privately to your account."}
+  catch(e){clearTimeout(to);st.students=loadLocal();$("storeNote").textContent="Couldn't reach your records — using this browser's copy."}}
+ else{st.students=loadLocal();$("storeNote").textContent="Records are saved in this browser only."}
+ st.students.forEach(fixGoal);renderRecent();onName()};
+
+/* ---------- AI ---------- */
+let sample=null,dict=null,tts=null;
+const aiReady=use("sample").then(s=>sample=s);
+use("dictation").then(d=>{dict=d;setupDictation()});
+use("tts").then(t=>tts=t);
+const askJSON=async(prompt,signal)=>{await aiReady;if(!sample)throw {code:"unavailable_here"};
+ let v=await sample.json(prompt,{signal,modelTier:"default"});
+ if(typeof v=="string"){const m=v.match(/\{[\s\S]*\}/);v=JSON.parse(m?m[0]:v)}return v};
+const aiErr=e=>e&&e.code=="unavailable_here"?"AI isn't available in this view. Open the page on claude.ai (signed in) to use it."
+ :e&&e.code=="not_granted"?"AI access was declined. Reload the page and allow it."
+ :e&&e.code=="rate_limited"?"Too many requests just now — wait a minute and try again."
+ :e&&e.name=="AbortError"?"Cancelled.":"Something went wrong with the AI. Try again.";
+const studentCtx=s=>`Student: ${s.name}. Native language: ${s.lang||"unknown"}. Current level estimate: ${s.level}. Main category: ${CATS[s.goal]}.${s.notes?" Teacher notes: "+s.notes:""}`;
+const arr=v=>Array.isArray(v)?v:[];
+const clamp5=v=>Math.max(1,Math.min(5,Math.round(+v||0)))||0;
+const bnd=v=>{v=+v;return v?Math.max(0,Math.min(9,r5(v))):0};
+let ctrl=null;
+const speak=async txt=>{try{if(tts){await tts.speak(txt,{rate:.95});return}}catch(e){if(e&&e.code=="not_granted")tts=null;else return}
+ try{const u=new SpeechSynthesisUtterance(txt);u.lang="en-US";u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}};
+const copy=txt=>navigator.clipboard.writeText(txt).then(()=>toast("Copied"),()=>toast("Copy was blocked — select the text instead."));
+const loading=(msg)=>`<div class="notice" style="margin-top:18px"><span class="spin"></span> ${esc(msg)} <button id="cancelAI" style="margin-left:8px;min-height:34px">Cancel</button></div>`;
+const bindCancel=()=>{const b=$("cancelAI");if(b)b.onclick=()=>ctrl&&ctrl.abort()};
+
+/* ---------- name + recent students ---------- */
+const findStu=n=>st.students.find(x=>x.name.trim().toLowerCase()==n.trim().toLowerCase());
+const renderRecent=()=>{const list=st.students.slice().sort((a,b)=>String((b.sessions||[]).slice(-1)[0]?.date||b.created).localeCompare(String((a.sessions||[]).slice(-1)[0]?.date||a.created))).slice(0,8);
+ $("recent").innerHTML=list.length?`<span style="font-size:13px;font-weight:700;color:var(--soft);align-self:center">Recent:</span>`+list.map(x=>`<button data-n="${esc(x.name)}" style="min-height:36px;padding:6px 12px">${esc(x.name)} <span class="tag">${esc(lastLevel(x))}</span></button>`).join(""):""};
+$("recent").onclick=e=>{const b=e.target.closest("[data-n]");if(!b)return;$("nameIn").value=b.dataset.n;onName()};
+const onName=()=>{const s=findStu($("nameIn").value);st.cur=s||null;
+ if(s){st.lvl=lastLevel(s);$("fLang").value=s.lang||"";$("fNotes").value=s.notes||"";$("fBil").checked=!!s.bil;pickDefaultQs();renderBuilder()}
+ renderHist();$("who").textContent=$("nameIn").value.trim()};
+$("nameIn").oninput=onName;
+const goHome=()=>{stopAll();renderRecent();renderBuilder();renderHist();show("home")};
+$("homeLink").onclick=goHome;$("homeLink").onkeydown=e=>{if(e.key=="Enter")goHome()};
+const ensureStudent=()=>{const name=$("nameIn").value.trim();if(!name)return null;let s=findStu(name);
+ if(!s){s={id:"st_"+uid4(),name,sessions:[],created:new Date().toISOString(),level:st.type=="placement"?"B1":st.lvl};st.students.push(s)}
+ Object.assign(s,{name,goal:st.cat,lang:$("fLang").value.trim(),notes:$("fNotes").value.trim(),bil:$("fBil").checked});st.cur=s;return s};
+
+/* ---------- student screen / builder ---------- */
+const openStudent=()=>goHome();
+const lastLevel=s=>{const l=(s.sessions||[]).slice(-1)[0];return (l&&l.level&&LV.includes(l.level.slice(0,2)))?l.level.slice(0,2):s.level};
+const renderBuilder=()=>{
+ $("types").innerHTML=Object.entries(TYPES).map(([k,t])=>`<button class="type ${st.type==k?"on":""}" data-t="${k}"><span class="e" aria-hidden="true">${t.e}</span><b>${esc(t.n)}</b><small>${esc(t.d)}</small></button>`).join("");
+ renderCats();
+ $("skillPick").hidden=st.type!="skills";
+ $("skills").innerHTML=Object.entries(SK).map(([k,[e,n]])=>`<button data-s="${k}" class="${st.skill==k?"on":""}">${e} ${esc(n)}</button>`).join("");
+ renderLevels();
+ $("selected").innerHTML=`<span class="tag lv">${esc(CATS[st.cat])}</span><span class="tag lv">${esc(st.lvl)} · ${esc(LVINFO[st.lvl][0])}</span><span style="color:var(--soft);font-weight:600;font-size:14px">${esc(LVINFO[st.lvl][1])} · change in the sidebar</span>`;
+ const secs=plannedSections();$("qPick").hidden=!(st.type=="skills"&&st.skill=="speaking");renderQs();
+ $("plan").innerHTML=`<div class="lvnote"><b>${esc(st.lvl)} activities:</b> ${esc(st.cat=="ielts"?IELTSNOTE[st.lvl]:LS(st.lvl).note)}</div><span>Plan:</span>`+secs.map(k=>`<span class="tag">${SK[k][0]} ${esc(SK[k][1])}</span>`).join("→")+`<span class="tag lv">${esc(CATS[st.cat])}</span>`+(st.type=="placement"?`<span class="tag">starts at ${esc(st.lvl)}, adapts</span>`:`<span class="tag">${esc(st.lvl)} level</span>`);
+ $("startSess").disabled=st.type=="skills"&&st.skill=="speaking"&&!st.sel.length};
+$("types").onclick=e=>{const b=e.target.closest("[data-t]");if(!b)return;st.type=b.dataset.t;renderBuilder()};
+const CATICON={general:["🌍","Everyday life, travel and social English"],business:["💼","Emails, meetings, clients and reports"],ielts:["🎓","Exam-style tasks and band scores"]};
+const renderCats=()=>{$("catList").innerHTML=Object.entries(CATS).map(([k,n])=>`<button class="catb ${st.cat==k?"on":""}" data-c="${k}" aria-pressed="${st.cat==k}"><span class="ci" aria-hidden="true">${CATICON[k][0]}</span><span><b>${esc(n)}</b><small>${esc(CATICON[k][1])}</small></span></button>`).join("")};
+$("catList").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;
+ if($("sec").classList.contains("on")||$("task").classList.contains("on")){toast("Finish this assessment first, or press Home to leave it.");return}
+ st.cat=b.dataset.c;pickDefaultQs();renderBuilder();if(!$("home").classList.contains("on"))goHome()};
+$("skills").onclick=e=>{const b=e.target.closest("[data-s]");if(!b)return;st.skill=b.dataset.s;renderBuilder()};
+const LVINFO={A1:["Beginner","Introduce yourself, simple questions"],A2:["Elementary","Shopping, directions, simple emails"],B1:["Intermediate","Everyday talk, simple opinions"],B2:["Upper-intermediate","Meetings, detailed texts, fluent talk"],C1:["Advanced","Presentations, negotiations, academic work"],C2:["Proficiency","Nuance and precision, near-native"]};
+const renderLevels=()=>{$("lvList").innerHTML=LV.map(l=>`<button class="lvb ${st.lvl==l?"on":""}" data-l="${l}" aria-pressed="${st.lvl==l}"><span class="lc">${l}</span><span><b>${esc(LVINFO[l][0])}</b><small>${esc(LVINFO[l][1])}</small></span></button>`).join("")};
+$("lvList").onclick=e=>{const b=e.target.closest("[data-l]");if(!b)return;
+ if($("sec").classList.contains("on")||$("task").classList.contains("on")){toast("Finish this assessment first, or press Home to leave it.");return}
+ st.lvl=b.dataset.l;pickDefaultQs();renderBuilder();if(!$("home").classList.contains("on"))goHome()};
+const plannedSections=()=>st.type=="skills"?[st.skill]:TYPES[st.type].sec;
+/* speaking question pools */
+/* level-specific settings and activities */
+const LVSET={A1:{plays:3,rate:.8,gn:10,note:"Picture description · personal questions · a form to complete · slower listening, 3 plays · 1 short written reading answer"},
+ A2:{plays:2,rate:.88,gn:10,note:"Role-plays (shop, doctor, directions) · short messages and notes · listening twice"},
+ B1:{plays:2,rate:.95,gn:12,note:"Stories, opinions and role-plays · emails and short stories · summary + opinion answers"},
+ B2:{plays:2,rate:1,gn:12,note:"Discussion and problem-solving · reviews and opinion essays · natural-speed listening"},
+ C1:{plays:2,rate:1,gn:12,note:"Debate, persuasion and evaluation · reports, proposals and discursive essays · evaluating the writer's argument"},
+ C2:{plays:1,rate:1.05,gn:12,note:"Devil's advocate, register switching and abstract topics · critical essays · fast, natural listening heard once"}};
+const IELTSNOTE={A1:"IELTS foundation (IELTS is designed for B1+): simple Part 1 questions · a short letter · recordings played twice, slower",
+ A2:"IELTS foundation: Part 1 questions · a Task 1-style letter · recordings played twice",B1:"Part 1 + a Part 2 cue card with 1-minute preparation · Task 1 letter or Task 2 essay · recording heard once",
+ B2:"Full speaking test (Parts 1–3) · Task 2 essay · recording heard once",C1:"Full speaking test (Parts 1–3) · Task 2 essay · academic-style passages and talks",
+ C2:"Band 8–9 practice: advanced Part 3 discussion · demanding Task 2 essay · academic lecture, heard once"};
+const LS=l=>LVSET[String(l||"B1").slice(0,2)]||LVSET.B1;
+const ieltsPool=lvl=>{const S=C.speaking.ielts,i=li(lvl);return i<2?S.FOUND:i<3?[].concat(S.P1,S.P2):i<5?[].concat(S.P1,S.P2,S.P3):[].concat(S.P1,S.P2,S.P3HARD)};
+const qPool=(cat,lvl)=>{if(cat=="ielts")return ieltsPool(lvl);const S=C.speaking[cat]||C.speaking.general;return S[String(lvl).slice(0,2)]||S[bandOf(lvl)]||S.B1||[]};
+const toTask=q=>({e:q[0],c:q[1],q:q[2],sec:q[3],prep:q[4]||0});
+const autoQs=(cat,lvl,type)=>{if(cat=="ielts"){const S=C.speaking.ielts,i=li(lvl);
+  const parts=i<2?shuf(S.FOUND).slice(0,4):i<3?[...shuf(S.P1).slice(0,3),...shuf(S.P2).slice(0,1)]:i<5?[...shuf(S.P1).slice(0,2),...shuf(S.P2).slice(0,1),...shuf(S.P3).slice(0,2)]:[...shuf(S.P1).slice(0,1),...shuf(S.P2).slice(0,1),...shuf(S.P3HARD).slice(0,3)];return parts.map(toTask)}
+ const pool=qPool(cat,lvl),n=type=="placement"?3:4,sig=SIG[String(lvl).slice(0,2)],first=sig?shuf(pool.filter(q=>sig.test(q[1])))[0]:null;
+ return (first?[first,...shuf(pool.filter(q=>q!==first)).slice(0,n-1)]:shuf(pool).slice(0,n)).map(toTask)};
+const SIG={A1:/Picture/,A2:/Role-play/,B1:/Role-play|Story/,B2:/Problem-solving|Discuss/,C1:/Debate|Persuasion/,C2:/Devil|Register/};
+const pickDefaultQs=()=>{st.sel=autoQs(st.cat,st.lvl,"skills")};
+const renderQs=()=>{const pool=qPool(st.cat,st.lvl),selQ=new Set(st.sel.map(x=>x.q));
+ $("qlist").innerHTML=pool.map((q,i)=>`<label class="qopt ${selQ.has(q[2])?"on":""}"><input type="checkbox" data-i="${i}" ${selQ.has(q[2])?"checked":""}><span class="e" aria-hidden="true">${q[0]}</span><span>${esc(q[2])}</span><span class="tag">${esc(q[1])}</span></label>`).join("")
+  +st.sel.filter(x=>x.custom).map(x=>`<label class="qopt on"><input type="checkbox" data-c="${esc(x.q)}" checked><span class="e" aria-hidden="true">✏️</span><span>${esc(x.q)}</span><span class="tag">Custom</span></label>`).join("")};
+$("qlist").onchange=e=>{const t=e.target,pool=qPool(st.cat,st.lvl);if(t.dataset.i!=null){const q=pool[+t.dataset.i];if(t.checked)st.sel.push(toTask(q));else st.sel=st.sel.filter(x=>x.q!=q[2])}
+ else if(t.dataset.c!=null&&!t.checked)st.sel=st.sel.filter(x=>x.q!=t.dataset.c);renderBuilder()};
+$("addCustom").onclick=()=>{const q=$("customQ").value.trim();if(!q)return;st.sel.push({e:"✏️",c:"Custom",q,sec:bandOf(st.lvl)=="A"?60:bandOf(st.lvl)=="B"?90:120,custom:true});$("customQ").value="";renderBuilder()};
+$("customQ").onkeydown=e=>{if(e.key=="Enter")$("addCustom").click()};
+const renderHist=()=>{if(!st.cur||!(st.cur.sessions||[]).length){$("histSheet").hidden=true;return}$("histSheet").hidden=false;$("histH").textContent=`${st.cur.name}'s history`;const ss=(st.cur.sessions||[]).slice().reverse();
+ $("hist").innerHTML=ss.length?ss.map(x=>`<button class="hitem" data-s="${esc(x.id)}"><span class="big">${esc(x.level||"–")}</span><span><b>${esc(new Date(x.date).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}))} · ${esc(TYPES[x.type]?TYPES[x.type].n:"Speaking session")} · ${esc(CATS[x.cat]||"")}</b><small>${esc(x.fb&&x.fb.headline||"")}</small></span><span class="tag">View report</span></button>`).join("")
+  :`<p class="lead" style="margin:0">No assessments yet. The first report will appear here.</p>`};
+$("hist").onclick=e=>{const b=e.target.closest("[data-s]");if(!b)return;const x=st.cur.sessions.find(y=>y.id==b.dataset.s);if(x)renderFeedback(x,true)};
+
+/* ---------- session flow ---------- */
+$("startSess").onclick=()=>{if(!ensureStudent()){toast("Type the student's name first.");$("nameIn").focus();return}persist(st.cur);renderRecent();$("who").textContent=st.cur.name;const secs=plannedSections();const lvl=st.lvl;
+ st.sess={id:"se_"+uid4(),date:new Date().toISOString(),type:st.type,cat:st.cat,lvl,
+  sections:secs.map(k=>({kind:k,done:false,res:null,data:{}})),si:0,tasks:[],i:0};
+ const sp=st.sess.sections.find(x=>x.kind=="speaking");if(sp)sp.data.tasks=(st.type=="skills"?st.sel:autoQs(st.cat,lvl,st.type)).map(t=>({...t,a:"",res:null,pron:0,flu:0}));
+ runSection(0)};
+const curLvl=()=>{const g=st.sess.sections.find(x=>x.kind=="grammar"&&x.res);return st.sess.type=="placement"&&g?g.res.level:st.sess.lvl};
+const stepperHTML=()=>`<div class="stepper">${st.sess.sections.map((x,i)=>`<span class="step ${i==st.sess.si?"cur":x.done?"done":""}">${x.done?"✓":SK[x.kind][0]} ${esc(SK[x.kind][1])}</span>`).join("")}<span class="step">${esc(CATS[st.sess.cat])}</span></div>`;
+const runSection=i=>{stopAll();st.sess.si=i;const s=st.sess.sections[i];if(!s){finish();return}
+ if(s.kind=="speaking"){st.sess.tasks=s.data.tasks;$("stepper2").innerHTML=stepperHTML().replace('<div class="stepper">','').replace(/<\/div>$/,"");openTask(0);return}
+ R[s.kind](s);show("sec")};
+const nextSection=()=>{const s=st.sess.sections[st.sess.si];s.done=true;runSection(st.sess.si+1)};
+const secHead=(s,sub)=>`${stepperHTML()}<div class="sechead"><div><span class="tag">${esc(TYPES[st.sess.type].n)}</span><h2 style="margin-top:6px">${SK[s.kind][0]} ${esc(SK[s.kind][1])}</h2><p class="lead" style="margin:4px 0 0">${sub}</p></div><div class="row"><button id="secBack">← Home</button><button id="secSkip">Skip section</button></div></div>`;
+const bindHead=()=>{$("secBack").onclick=()=>goHome();$("secSkip").onclick=()=>{nextSection()}};
+const confirmLeave=()=>true;
+const R={};
+
+/* --- grammar: adaptive 12 items --- */
+R.grammar=s=>{const d=s.data;if(!d.items){d.items=[];d.used=new Set();d.cur=li(st.sess.lvl);d.n=LS(st.sess.lvl).gn}
+ if(s.res){grammarResult(s);return}
+ const left=L=>(C.grammar[L]||[]).map((x,k)=>k).filter(k=>!d.used.has(L+k));
+ let lvl=LV[d.cur];if(!left(lvl).length){const near=[1,-1,2,-2,3,-3,4,-4,5,-5].map(o=>LV[d.cur+o]).find(L=>L&&left(L).length);if(!near){grammarEnd(s);return}lvl=near}
+ const k=shuf(left(lvl))[0];
+ d.used.add(lvl+k);const it=C.grammar[lvl][k],order=shuf([0,1,2,3]);d.q={lvl,it,order};
+ $("secSheet").innerHTML=secHead(s,`${d.items.length+1} of ${d.n} · choose the best answer. The test gets harder or easier depending on the answers.`)
+  +`<div class="gq">${esc(it.s).replace("___","<u></u>")}</div><div class="gopts">${order.map(o=>`<button data-o="${o}">${esc(it.o[o])}</button>`).join("")}</div>
+  <div class="meterrow"><span>Level now:</span><span class="tag lv">${lvl}</span><span>No answers are shown until the end.</span></div>`;
+ bindHead();document.querySelectorAll(".gopts button").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o==it.a;d.items.push({lvl,s:it.s,pick:it.o[+b.dataset.o],ans:it.o[it.a],ok,c:it.c||"",x:it.x||""});
+  d.cur=Math.max(0,Math.min(5,d.cur+(ok?1:-1)));if(d.items.length>=d.n)grammarEnd(s);else R.grammar(s)})};
+const grammarEnd=s=>{const it=s.data.items,late=it.slice(4);const right=it.filter(x=>x.ok).length;
+ let est=late.length?Math.round(late.reduce((a,x)=>a+li(x.lvl)+(x.ok?.5:-.5),0)/late.length):2;est=Math.max(0,Math.min(5,est));
+ s.res={level:LV[est],score:right,max:it.length,items:it};grammarResult(s)};
+const grammarResult=s=>{const r=s.res;
+ $("secSheet").innerHTML=secHead(s,"Test complete.")+`<div class="resline"><span class="cefr">${esc(r.level)}</span><div><b>${r.score} of ${r.max} correct</b><div style="color:var(--soft);font-weight:600">Estimated grammar &amp; vocabulary level</div></div></div>
+ <h3 style="font-size:20px;margin:22px 0 4px">Answers &amp; explanations</h3>
+ <div class="review">${r.items.map((x,i)=>{const [a,b]=x.s.split("___");return `<div class="rv2 ${x.ok?"y":"n"}"><div class="rvh"><span class="m ${x.ok?"y":"n"}">${x.ok?"✓ Correct":"✗ Not quite"}</span><span class="tag">${x.lvl}</span>${x.c?`<span class="tag concept">${esc(x.c)}</span>`:""}</div>
+  <div class="rvs">${i+1}. ${esc(a)}<b>${esc(x.ans)}</b>${esc(b||"")}</div>${x.ok?"":`<div class="rvp">Answer given: <s>${esc(x.pick)}</s></div>`}${x.x?`<div class="rvx">💡 ${esc(x.x)}</div>`:""}</div>`}).join("")}</div>
+ <div id="secFb"></div>
+ <div class="row" style="margin-top:18px"><button class="pri" id="secNext">Continue →</button></div>`;bindHead();$("secSkip").hidden=true;$("secNext").onclick=nextSection;sectionFeedback(s)};
+
+/* --- reading & listening: AI-generated --- */
+const lenFor=l=>({A1:"90-120",A2:"120-160",B1:"180-230",B2:"230-290",C1:"300-360",C2:"340-400"})[l]||"200-260";
+const readPrompt=(l,cat)=>`Write a READING test for an adult English learner.
+Category: ${CATS[cat]} — ${CATDESC[cat]}. Target CEFR level: ${l}. Text length: ${lenFor(l)} words, with paragraphs separated by \\n\\n.
+${cat=="business"?"Use a realistic workplace text (email, memo, short report or article).":cat=="ielts"?"Use an IELTS-style factual passage.":"Use an article, story or blog post on an everyday topic."}
+Write 5 questions testing the main idea, specific details, vocabulary in context${li(l)>=3?" and inference":""}. ${cat=="ielts"?"Make 2 of them True/False/Not Given with options exactly [\"True\",\"False\",\"Not Given\"]; the rest multiple choice with 4 options.":"Each question has 3 or 4 options."}
+Vary the position of the correct answer.
+Return ONLY JSON: {"title": string, "text": string, "questions": [{"q": string, "options": [string], "answer": 0-based index of the correct option, "explain": max 15 words}]}`;
+const listenPrompt=(l,cat)=>`Write a LISTENING test script for an adult English learner. It will be read aloud by text-to-speech.
+Category: ${CATS[cat]} — ${CATDESC[cat]}. Target CEFR level: ${l}.
+${cat=="business"?"A phone call or meeting between two colleagues or a client and supplier.":cat=="ielts"?"IELTS Listening style: e.g. a booking/enquiry conversation (lower levels) or a discussion between two students (higher levels).":"An everyday conversation (shopping, travel, plans, friends)."}
+Two speakers with first names (one female, one male). ${li(l)<2?"8-10":"10-14"} lines, natural spoken English at ${l} level, include specific details (times, numbers, names, reasons) to test.
+Write 5 multiple-choice questions with 4 options each, in the order the answers appear. Vary the position of the correct answer.
+Return ONLY JSON: {"title": string, "context": one sentence telling the student what they will hear, "speakers": {"Name": "female" or "male"}, "lines": [{"s": speaker name, "t": text}], "questions": [{"q": string, "options": [string], "answer": 0-based index, "explain": max 15 words}]}`;
+const normTest=r=>({title:String(r.title||""),text:String(r.text||""),context:String(r.context||""),speakers:r.speakers&&typeof r.speakers=="object"?r.speakers:{},
+ lines:arr(r.lines).slice(0,20).map(x=>({s:String(x.s||""),t:String(x.t||"")})),
+ questions:arr(r.questions).slice(0,6).map(q=>({q:String(q.q||""),options:arr(q.options).slice(0,4).map(String),answer:Math.max(0,+q.answer||0),explain:String(q.explain||"")})).filter(q=>q.options.length>1)});
+const pickFixed=(s,kind)=>{const list=(C[kind]&&(C[kind][st.sess.cat]||C[kind].general))||[];if(!list.length)return false;
+ const want=li(curLvl());const t=list.slice().sort((a,b)=>Math.abs(li(a.level)-want)-Math.abs(li(b.level)-want)||li(a.level)-li(b.level))[0];
+ const qs=t.questions.map(q=>{const tf=q.options.length==3&&q.options[0]=="True";if(tf)return {...q};const ord=shuf(q.options.map((_,i)=>i));return {...q,options:ord.map(i=>q.options[i]),answer:ord.indexOf(q.answer)}});
+ s.data.test=normTest({...t,questions:qs});s.data.lvl=t.level;s.data.picks={};s.data.plays=0;s.data.fixed=true;return true};
+const genTest=async(s,kind)=>{const l=curLvl();s.data.lvl=l;stopAll();ctrl=new AbortController();
+ $("secSheet").innerHTML=secHead(s,`Preparing a ${l} ${CATS[st.sess.cat]} ${kind} test…`)+loading(`Claude is writing the ${kind} test`);bindHead();bindCancel();
+ try{const r=await askJSON(kind=="reading"?readPrompt(l,st.sess.cat):listenPrompt(l,st.sess.cat),ctrl.signal);const t=normTest(r);if(!t.questions.length)throw {code:"bad"};s.data.test=t;s.data.picks={};s.data.plays=0;R[kind](s)}
+ catch(e){$("secSheet").innerHTML=secHead(s,"")+`<div class="notice err">${esc(aiErr(e))}</div><div class="row"><button class="pri" id="retry">Try again</button></div>`;bindHead();$("retry").onclick=()=>genTest(s,kind)}
+ finally{ctrl=null}};
+const qsHTML=(t,picks,marked)=>`<div class="qs">${t.questions.map((q,i)=>`<div class="qb"><div class="qt">${i+1}. ${esc(q.q)}</div><div class="os">${q.options.map((o,j)=>{let c=picks[i]===j?"sel":"";if(marked){if(j==q.answer)c="right";else if(picks[i]===j)c="wrong"}
+ return `<button data-q="${i}" data-o="${j}" class="${c}" ${marked?"disabled":""}>${String.fromCharCode(65+j)}. ${esc(o)}</button>`}).join("")}</div>${marked?`<div class="why">${picks[i]===q.answer?"✓":"✗"} ${esc(q.explain)}</div>`:""}</div>`).join("")}</div>`;
+const bindQs=(s,rerender)=>{document.querySelectorAll(".qb .os button").forEach(b=>b.onclick=()=>{s.data.picks[+b.dataset.q]=+b.dataset.o;rerender()})};
+const markTest=s=>{const t=s.data.test,ok=t.questions.filter((q,i)=>s.data.picks[i]===q.answer).length,p=ok/t.questions.length;
+ s.res={level:lvFromPct(p,s.data.lvl),score:ok,max:t.questions.length,pct:p,band:st.sess.cat=="ielts"?lvBand(lvFromPct(p,s.data.lvl),p):0,textLevel:s.data.lvl,title:t.title,
+  wrong:t.questions.filter((q,i)=>s.data.picks[i]!==q.answer).map(q=>q.q)}};
+const resLine=s=>{const r=s.res;return `<div class="resline"><span class="cefr">${esc(r.level)}</span><div><b>${r.mcMax!=null?`${r.mc}/${r.mcMax} multiple choice${r.openMax?` · ${r.openPts}/${r.openMax} written answers`:""}`:`${r.score} of ${r.max} correct`}</b>${r.band?` · IELTS band ≈ <b>${r.band}</b>`:""}<div style="color:var(--soft);font-weight:600">Text level ${esc(r.textLevel)} · estimated ${SK[s.kind][1].toLowerCase()} level ${esc(r.level)}</div></div></div>`};
+const OPENQ=l=>li(l)<1?["What is the text about? Write 1–2 simple sentences."]
+ :li(l)<2?["What is the text about? Write 2–3 sentences in your own words.","What is one thing you learned or liked in the text? Why?"]
+ :li(l)<4?["Summarise the main ideas of the text in your own words (3–4 sentences).","Do you agree with the ideas in the text? Give a reason and an example."]
+ :li(l)<5?["Summarise the writer's main argument and how it is supported (4–5 sentences).","Evaluate the text: which point is the most convincing or the weakest, and why?"]
+ :["Explain the writer's position and tone, and how the argument is built (4–5 sentences).","Challenge the text: what would a thoughtful critic say, and how might the writer respond?"];
+const openHTML=s=>{const d=s.data,marked=!!s.res;return `<h3 style="font-size:20px;margin:22px 0 4px">Your own words <span class="tag">Claude checks understanding and grammar</span></h3>
+ <div class="qs">${d.open.map((o,i)=>`<div class="qb"><div class="qt">${d.test.questions.length+i+1}. ${esc(o.q)}</div>
+  ${!marked?`<textarea class="openA" data-i="${i}" rows="4" placeholder="Type the answer, or press 🎙️ to speak it…" style="font:400 18px/1.6 'Source Serif 4',serif">${esc(o.a)}</textarea>${dict?`<div class="row" style="margin-top:6px"><button class="omic" data-i="${i}">🎙️ Speak this answer</button></div>`:""}`
+  :o.res?openResHTML(o):o.a.trim()?`<div class="notice"><span class="spin"></span> Claude is checking this answer…</div>`:`<p style="margin:0;color:var(--soft)">No answer given.</p>`}</div>`).join("")}</div>`};
+const UND={correct:["✓ Understood the text","y"],partly:["◐ Partly understood","m"],incorrect:["✗ Missed the main point","n"]};
+const openResHTML=o=>{const r=o.res,u=UND[r.understanding]||UND.partly;return `<div class="und ${u[1]}">${u[0]} · ${r.score}/2</div><p style="margin:6px 0 0;font-weight:600">${esc(r.comment)}</p>
+ <div class="marked" style="font-size:18px">${diffHTML(o.a,r.corrected||o.a)}</div>${r.errors.length?`<div class="box" style="margin-top:8px"><h3>Grammar corrections <span class="tag">${r.errors.length}</span></h3>${r.errors.map(errCard).join("")}</div>`:`<p style="margin:6px 0 0;color:var(--ok);font-weight:700">No grammar mistakes — well done!</p>`}`};
+const checkOpen=async s=>{const d=s.data,todo=d.open.filter(o=>o.a.trim()&&!o.res);if(!todo.length){finishReading(s);return}
+ try{ctrl=new AbortController();const r=await askJSON(`You are an experienced ESL teacher checking an ADULT learner's written answers about a reading text.
+${studentCtx(st.cur)} Category: ${CATS[st.sess.cat]}. Text level: ${d.lvl}.
+TEXT ("${d.test.title}"):
+"""${d.test.text.slice(0,5000)}"""
+${d.open.map((o,i)=>`Answer ${i+1} — Question: ${o.q}\nStudent's answer: """${o.a.slice(0,2000)}"""`).join("\n\n")}
+For EACH answer (in order), check (a) whether it shows correct understanding of the text and (b) its grammar.
+Return ONLY JSON: {"answers":[{"understanding": "correct" | "partly" | "incorrect", "comment": 1-2 sentences on the CONTENT — what they understood correctly and what they missed or got wrong, referring to the text, "score": 0, 1 or 2, "corrected": the answer with MINIMAL corrections to grammar, spelling and word choice (keep their ideas), "errors": array (max 6) of {"original": exact words from their answer, "correction": string, "type": one of "grammar","tense","article","preposition","spelling","word choice","word order","agreement","collocation","other", "why": why this part is wrong (max 18 words), "how": how to correct it — the rule or pattern (max 18 words)}}]}
+${st.cur.lang?`Mention when an error is typical for ${st.cur.lang} speakers.`:""} If an answer is empty, return understanding "incorrect", score 0 and no errors.`,ctrl.signal);
+  arr(r.answers).forEach((a,i)=>{const o=d.open[i];if(!o||!o.a.trim())return;o.res={understanding:String(a.understanding||"partly"),comment:String(a.comment||""),score:Math.max(0,Math.min(2,Math.round(+a.score||0))),corrected:String(a.corrected||o.a),errors:arr(a.errors).slice(0,6).map(normErr)}})}
+ catch(e){d.openErr=aiErr(e)}finally{ctrl=null}
+ finishReading(s)};
+const finishReading=s=>{const d=s.data,done=d.open.filter(o=>o.res),pts=done.reduce((a,o)=>a+o.res.score,0),mx=done.length*2;
+ const tot=(s.res.mc+pts)/(s.res.mcMax+mx);s.res.openPts=pts;s.res.openMax=mx;s.res.score=s.res.mc+pts;s.res.max=s.res.mcMax+mx;s.res.pct=tot;
+ s.res.level=lvFromPct(tot,d.lvl);s.res.band=st.sess.cat=="ielts"?lvBand(s.res.level,tot):0;s.res.openErrors=done.flatMap(o=>o.res.errors).map(e=>`"${e.original}"→"${e.correction}" (${e.type})`);
+ s.res.openUnd=done.map(o=>o.res.understanding);d.openDone=true;s.res.fb=null;if(st.sess.sections[st.sess.si]===s)R.reading(s)};
+R.reading=s=>{if(!s.data.test&&!pickFixed(s,"reading")){genTest(s,"reading");return}if(!s.data.open)s.data.open=OPENQ(s.data.lvl).map(q=>({q,a:"",res:null}));const t=s.data.test,marked=!!s.res;
+ $("secSheet").innerHTML=secHead(s,`Level ${esc(s.data.lvl)} · read the text and answer the questions. ${marked?"":"Take about "+(li(s.data.lvl)<2?6:li(s.data.lvl)<4?10:12)+" minutes."}`)
+  +`<div class="rd"><div class="passage"><h3>${esc(t.title)}</h3>${t.text.split(/\n\s*\n/).map(p=>`<p>${esc(p)}</p>`).join("")}</div><div>${qsHTML(t,s.data.picks,marked)}
+  ${openHTML(s)}${s.data.openErr?`<div class="notice err">${esc(s.data.openErr)}</div>`:""}
+  ${marked&&s.data.openDone?resLine(s)+`<div class="row" style="margin-top:14px"><button class="pri" id="secNext">Continue →</button></div>`:marked?"":`<div class="row" style="margin-top:14px"><button class="pri" id="markBtn">Check answers</button><button id="regen" title="Claude writes a new text at this level">✨ New text with AI</button></div>`}</div></div>${marked&&s.data.openDone?'<div id="secFb"></div>':""}`;
+ bindHead();
+ document.querySelectorAll(".openA").forEach(a=>a.oninput=()=>{s.data.open[+a.dataset.i].a=a.value});
+ document.querySelectorAll(".omic").forEach(b=>b.onclick=()=>{const ta=document.querySelector(`.openA[data-i="${b.dataset.i}"]`);if(listening){dict.stop().catch(()=>{});return}dictTarget=ta;dict.start().catch(()=>toast("The microphone couldn't start — type the answer instead."));b.textContent="⏹ Stop speaking"});
+ if(!marked){bindQs(s,()=>{document.querySelectorAll(".openA").forEach(a=>s.data.open[+a.dataset.i].a=a.value);R.reading(s)});
+  $("markBtn").onclick=()=>{document.querySelectorAll(".openA").forEach(a=>s.data.open[+a.dataset.i].a=a.value);if(listening)dict.stop().catch(()=>{});
+   if(Object.keys(s.data.picks).length<t.questions.length)confirmBlank();markTest(s);s.res.mc=s.res.score;s.res.mcMax=s.res.max;R.reading(s);checkOpen(s)};
+  $("regen").onclick=()=>{s.data.test=null;s.data.open=null;genTest(s,"reading")}}
+ else if(s.data.openDone){$("secSkip").hidden=true;$("secNext").onclick=nextSection;sectionFeedback(s)}};
+const confirmBlank=()=>{toast("Some questions are unanswered — they count as wrong.");return true};
+/* listening playback */
+const VOICES=["airy","rounded","glassy","buttery"];
+let playing=false;
+const playScript=async s=>{const t=s.data.test,names=Object.keys(t.speakers).length?Object.keys(t.speakers):[...new Set(t.lines.map(l=>l.s))];
+ const vmap={};names.forEach((n,i)=>vmap[n]=(t.speakers[n]||"").startsWith("m")?(i%2?"rounded":"glassy"):(i%2?"buttery":"airy"));
+ s.data.plays++;playing=true;R.listening(s);
+ try{if(tts){await tts.speak(t.lines.map(l=>({text:l.t,voice:vmap[l.s]||"buttery",language:"en"})),{rate:LS(s.data.lvl).rate})}
+  else{await new Promise(res=>{let k=0;const nx=()=>{if(k>=t.lines.length||!playing){res();return}const l=t.lines[k++];const u=new SpeechSynthesisUtterance(l.t);u.lang="en-GB";u.rate=LS(s.data.lvl).rate;u.pitch=(t.speakers[l.s]||"").startsWith("m")?.8:1.15;u.onend=nx;u.onerror=nx;speechSynthesis.speak(u)};speechSynthesis.cancel();nx()})}}
+ catch(e){if(e&&e.code=="busy")toast("Stop voice typing first.")}
+ playing=false;if($("secSheet")&&st.sess&&st.sess.sections[st.sess.si]===s)R.listening(s)};
+const stopPlay=()=>{playing=false;try{tts&&tts.stop()}catch(e){}try{speechSynthesis.cancel()}catch(e){}};
+R.listening=s=>{if(!s.data.test&&!pickFixed(s,"listening")){genTest(s,"listening");return}const t=s.data.test,marked=!!s.res,maxP=st.sess.cat=="ielts"?(li(s.data.lvl)<2?2:1):LS(s.data.lvl).plays,left=maxP-s.data.plays;
+ $("secSheet").innerHTML=secHead(s,`Level ${esc(s.data.lvl)} · ${maxP==1?"you will hear the recording ONCE"+(st.sess.cat=="ielts"?", like the real exam.":"."):`you can listen ${maxP==3?"three times":"twice"}${LS(s.data.lvl).rate<.9?", at a slower speed":""}.`} Read the questions first.`)
+  +`<div class="player"><button class="play" id="playBtn" aria-label="${playing?"Stop":"Play"}" ${!playing&&left<=0&&!marked?"disabled":""}>${playing?'<svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="4" width="14" height="14" rx="2" fill="currentColor"/></svg>':'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 4v16l13-8z" fill="currentColor"/></svg>'}</button>
+   <div style="flex:1 1 240px"><div class="ctx">${esc(t.context||t.title)}</div><small>${marked?"Transcript below":playing?"Playing…":left>0?`${left} play${left>1?"s":""} left`:"No plays left"}</small></div><div class="wave ${playing?"on":""}" aria-hidden="true">${"<i></i>".repeat(14)}</div></div>
+  <div class="rd"><div>${qsHTML(t,s.data.picks,marked)}${marked?resLine(s)+`<div class="row" style="margin-top:14px"><button class="pri" id="secNext">Continue →</button></div>`:`<div class="row" style="margin-top:14px"><button class="pri" id="markBtn">Check answers</button><button id="regen" title="Claude writes a new recording at this level">✨ New recording with AI</button></div>`}</div>
+  <div>${marked?`<div class="passage"><h3>Transcript</h3><div class="script">${t.lines.map(l=>`<p><b>${esc(l.s)}:</b> ${esc(l.t)}</p>`).join("")}</div></div>`:`<div class="notice">The transcript appears after you check the answers.</div>`}</div></div>${marked?'<div id="secFb"></div>':""}`;
+ bindHead();$("playBtn").onclick=()=>{if(playing){stopPlay();return}if(marked||left>0)playScript(s)};
+ if(!marked){bindQs(s,()=>R.listening(s));$("markBtn").onclick=()=>{stopPlay();markTest(s);R.listening(s)};$("regen").onclick=()=>{stopPlay();s.data.test=null;genTest(s,"listening")}}
+ else{$("secSkip").hidden=true;$("secNext").onclick=()=>{stopPlay();nextSection()};sectionFeedback(s)}};
+
+/* --- writing --- */
+let wTick=null;
+const wPool=(cat,l)=>{const W=C.writing[cat]||C.writing.general;return W[String(l).slice(0,2)]||W[bandOf(l)]||[]};
+R.writing=s=>{const d=s.data;if(!d.task){const l=curLvl(),pool=wPool(st.sess.cat,l);
+  const pl=st.sess.type=="placement";const tk=shuf(pool)[0]||{t:"Write about your plans for next year.",w:[100,150],min:15};
+  d.task={...tk,min:pl?Math.min(tk.min,12):tk.min,w:pl&&st.sess.cat!="ielts"?[Math.round(tk.w[0]*.7),Math.round(tk.w[1]*.7)]:tk.w};d.lvl=l;d.text="";d.left=d.task.min*60}
+ const t=d.task,wc=(d.text.trim().match(/\S+/g)||[]).length;
+ $("secSheet").innerHTML=secHead(s,`Level ${esc(d.lvl)} · the student writes; Claude marks it.`)
+  +`<div class="wtask" id="wtaskTxt">${t.act?`<span class="tag" style="margin-bottom:6px">${esc(t.act)}</span><br>`:""}${esc(t.t).replace(/\n/g,"<br>")}<div style="font:700 14px Manrope;color:var(--soft);margin-top:6px">Write ${t.w[0]}–${t.w[1]} words · suggested time ${t.min} minutes</div></div>
+  <div class="row" style="margin-top:8px"><button id="editTask">Edit task</button><button id="newTask">Different task</button></div>
+  <div class="wbar"><span class="clock" id="wclock">${fmt(d.left)}</span><button id="wTimer">${wTick?"Pause":"Start timer"}</button><span class="tag" id="wwc">${wc} words</span></div>
+  <textarea class="wr" id="wr" placeholder="The student types their answer here…">${esc(d.text)}</textarea>
+  <div class="row" style="margin-top:14px"><button class="pri" id="wMark">✍️ Mark with AI</button>${s.res?'<button class="dark" id="secNext">Continue →</button>':'<button id="wNext">Continue without marking →</button>'}</div><div id="wOut">${s.res?writingResultHTML(s)+'<div id="secFb"></div>':""}</div>`;
+ bindHead();if(s.res)$("secSkip").hidden=true;
+ $("wr").oninput=()=>{d.text=$("wr").value;$("wwc").textContent=`${(d.text.trim().match(/\S+/g)||[]).length} words`};
+ $("wTimer").onclick=()=>{if(wTick){clearInterval(wTick);wTick=null;$("wTimer").textContent="Resume timer";return}wTick=setInterval(()=>{d.left--;const c=$("wclock");if(!c){clearInterval(wTick);wTick=null;return}c.textContent=fmt(Math.max(0,d.left));if(d.left<=0){clearInterval(wTick);wTick=null;toast("Time's up!")}},1000);$("wTimer").textContent="Pause"};
+ $("editTask").onclick=()=>{const box=$("wtaskTxt");box.innerHTML=`<textarea id="taskEd" rows="3" style="font:inherit">${esc(t.t)}</textarea><div class="row" style="margin-top:6px"><button id="taskSave" class="dark">Save task</button></div>`;$("taskSave").onclick=()=>{const v2=$("taskEd").value.trim();if(v2)t.t=v2;R.writing(s)}};
+ $("newTask").onclick=()=>{const pool=wPool(st.sess.cat,d.lvl);const o=pool.filter(x=>x.t!=t.t);if(!o.length){toast("No other task at this level — use Edit task.");return}const tk=shuf(o)[0];d.task={...tk,w:tk.w.slice()};d.left=tk.min*60;s.res=null;R.writing(s)};
+ $("wMark").onclick=()=>markWriting(s);
+ if($("secNext"))$("secNext").onclick=()=>{clearInterval(wTick);wTick=null;nextSection()};if($("wNext"))$("wNext").onclick=()=>{clearInterval(wTick);wTick=null;nextSection()};
+ if(s.res){bindSay();sectionFeedback(s)}};
+const writePrompt=(s)=>{const d=s.data,ie=st.sess.cat=="ielts";return `You are an experienced examiner and ESL teacher marking an ADULT learner's WRITING.
+${studentCtx(st.cur)}
+Category: ${CATS[st.sess.cat]}. Task (level ${d.lvl}): "${d.task.t}" (target ${d.task.w[0]}-${d.task.w[1]} words).
+Student's text:
+"""${d.text.slice(0,6000)}"""
+Return ONLY JSON:
+{"corrected": the text with MINIMAL corrections (grammar, spelling, word choice, punctuation) keeping their words and ideas,
+ "errors": array (max 10, most important first) of {"original": exact words from the text, "correction": string, "type": one of "grammar","tense","article","preposition","spelling","punctuation","word choice","word order","collocation","register","other", "why": why this part is wrong (max 18 words), "how": how to correct it — the rule or pattern (max 18 words)},
+ "upgrades": array (max 4) of {"from": basic word/phrase they used, "to": better alternative, "why": max 12 words},
+ "strengths": 2 specific strengths,
+ "scores": {"task":1-5,"organisation":1-5,"vocabulary":1-5,"grammar":1-5},
+ "cefr": CEFR level of this writing,
+ ${ie?'"ielts": {"tr": Task Response band, "cc": Coherence & Cohesion band, "lr": Lexical Resource band, "gra": Grammatical Range & Accuracy band, "overall": overall band} (bands 0-9 in 0.5 steps, as an IELTS examiner),':""}
+ "better": a rewritten opening paragraph one level higher (max 90 words),
+ "comment": one sentence with the most useful next step}
+${st.cur.lang?`Mention in explanations when an error is typical for ${st.cur.lang} speakers.`:""}`};
+const normWrite=r=>({corrected:String(r.corrected||""),errors:arr(r.errors).slice(0,10).map(normErr),
+ upgrades:arr(r.upgrades).slice(0,4).map(u=>({from:String(u.from||""),to:String(u.to||""),why:String(u.why||"")})),strengths:arr(r.strengths).slice(0,3).map(String),
+ scores:{task:clamp5(r.scores&&r.scores.task),organisation:clamp5(r.scores&&r.scores.organisation),vocabulary:clamp5(r.scores&&r.scores.vocabulary),grammar:clamp5(r.scores&&r.scores.grammar)},
+ cefr:String(r.cefr||"").slice(0,4),ielts:r.ielts?{tr:bnd(r.ielts.tr),cc:bnd(r.ielts.cc),lr:bnd(r.ielts.lr),gra:bnd(r.ielts.gra),overall:bnd(r.ielts.overall)}:null,better:String(r.better||""),comment:String(r.comment||"")});
+const markWriting=async s=>{const d=s.data;d.text=$("wr").value;if((d.text.trim().match(/\S+/g)||[]).length<10){toast("Write at least a few sentences first.");return}
+ clearInterval(wTick);wTick=null;ctrl=new AbortController();$("wMark").disabled=true;$("wOut").innerHTML=loading("Marking the writing…");bindCancel();
+ try{const r=normWrite(await askJSON(writePrompt(s),ctrl.signal));s.res={level:r.cefr||d.lvl,band:r.ielts?r.ielts.overall:0,...r,task:d.task.t,text:d.text};R.writing(s)}
+ catch(e){$("wOut").innerHTML=`<div class="notice err">${esc(aiErr(e))}</div>`;$("wMark").disabled=false}finally{ctrl=null}};
+const normErr=e=>({original:String(e.original||""),correction:String(e.correction||""),type:String(e.type||"other"),explanation:String(e.why||e.explanation||""),how:String(e.how||"")});
+const errCard=e=>`<div class="ecard"><span class="tag">${esc(e.type)}</span><div class="fix"><s>${esc(e.original)}</s> → <b>${esc(e.correction)}</b></div>${e.explanation?`<p><b>Why it's wrong:</b> ${esc(e.explanation)}</p>`:""}${e.how?`<p><b>How to fix it:</b> ${esc(e.how)}</p>`:""}</div>`;
+const errBox=errs=>`<div class="box"><h3>Corrections <span class="tag">${errs.length}</span></h3>${errs.length?errs.map(errCard).join(""):'<p style="margin:0;color:var(--soft)">No errors found. Excellent!</p>'}</div>`;
+const upBox=(ups,str,cm)=>`<div class="box"><h3>Better word choices</h3>${ups.length?ups.map(u=>`<div class="up">${esc(u.from)} → <mark>${esc(u.to)}</mark><small>${esc(u.why)}</small></div>`).join(""):'<p style="margin:0;color:var(--soft)">Word choice was good.</p>'}</div>
+ <div class="box"><h3>What went well</h3><ul style="margin:0;padding-left:1.2em">${str.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p style="margin:10px 0 0;font-weight:700">${esc(cm)}</p></div>`;
+const dots=v=>`<div class="dots5">${[1,2,3,4,5].map(n=>`<i class="${n<=v?"f":""}"></i>`).join("")}</div>`;
+const scoreBox=(title,lvl,rows,extra)=>`<div class="box"><h3>${title} <span class="cefr" style="font-size:28px">${esc(lvl)}</span></h3><div class="scores">${rows.map(([k,v,max])=>`<div class="sc"><div class="l"><span>${k}</span><span>${v}/${max||5}</span></div>${max==9?`<div class="dots5">${[1,2,3,4,5,6,7,8,9].map(n=>`<i class="${n<=v?"f":""}"></i>`).join("")}</div>`:dots(v)}</div>`).join("")}${extra||""}</div></div>`;
+const writingResultHTML=s=>{const r=s.res;
+ return `<div style="margin-top:24px"><h3 style="font-size:20px;margin-bottom:6px">Corrected text</h3><div class="marked">${diffHTML(r.text,r.corrected)}</div>
+ <div class="row"><button data-copy="w">Copy corrected text</button></div>
+ <div class="cols">${errBox(r.errors)}
+ ${r.ielts?scoreBox("IELTS bands","Band "+r.ielts.overall,[["Task Response",r.ielts.tr,9],["Coherence & Cohesion",r.ielts.cc,9],["Lexical Resource",r.ielts.lr,9],["Grammatical Range & Accuracy",r.ielts.gra,9]],`<p style="margin:0;font-size:13px;color:var(--soft)">≈ CEFR ${esc(r.cefr)} · AI estimate</p>`)
+  :scoreBox("Scores",r.cefr,[["Task",r.scores.task],["Organisation",r.scores.organisation],["Vocabulary",r.scores.vocabulary],["Grammar",r.scores.grammar]])}
+ ${upBox(r.upgrades,r.strengths,r.comment)}</div>
+ <div class="box" style="margin-top:18px"><h3>Level-up opening</h3><div class="better">${esc(r.better)}</div></div></div>`};
+const bindSay=()=>{document.querySelectorAll("[data-copy=w]").forEach(b=>b.onclick=()=>copy(st.sess.sections[st.sess.si].res.corrected))};
+
+/* ---------- personalised feedback after every activity ---------- */
+const fbEvidence=s=>{const r=s.res;
+ if(s.kind=="grammar")return `Grammar & vocabulary test: ${r.score}/${r.max}, estimated ${r.level}. Correct on: ${r.items.filter(x=>x.ok).map(x=>x.c).join("; ")||"none"}. Wrong on: ${r.items.filter(x=>!x.ok).map(x=>`${x.c} (chose "${x.pick}", answer "${x.ans}")`).join("; ")||"none"}.`;
+ if(s.kind=="reading"||s.kind=="listening")return `${SK[s.kind][1]} test at ${r.textLevel} ("${r.title}"): ${r.score}/${r.max}, estimated ${r.level}${r.band?", IELTS band "+r.band:""}. Missed questions: ${r.wrong.join(" | ")||"none"}.${r.openUnd?` Written answers — understanding: ${r.openUnd.join(", ")||"none"}; grammar errors: ${(r.openErrors||[]).join("; ")||"none"}.`:""}`;
+ if(s.kind=="writing")return `Writing task: "${r.task}". Level ${r.cefr}${r.band?", band "+r.band:""}. Errors: ${r.errors.map(e=>`"${e.original}"→"${e.correction}" (${e.type})`).join("; ")||"none"}. Strengths noted: ${r.strengths.join("; ")}.`;
+ if(s.kind=="speaking")return `Speaking: ${r.score} answers, level ${r.level}${r.band?", band "+r.band:""}. `+st.sess.tasks.filter(t=>t.res).map(t=>`Q: ${t.q} | errors: ${t.res.errors.map(e=>`"${e.original}"→"${e.correction}"`).join("; ")||"none"}`).join(" || ");
+ return ""};
+const localFb=s=>{const r=s.res,n=st.cur.name.split(" ")[0];
+ if(s.kind=="grammar"){const good=[...new Set(r.items.filter(x=>x.ok).map(x=>x.c))],bad=[...new Set(r.items.filter(x=>!x.ok).map(x=>x.c))];
+  return {strength:good.length?`You handled ${good.slice(0,2).join(" and ")} well.`:"You kept going through a hard test — well done.",improve:bad.length?`Review ${bad.slice(0,2).join(" and ")}.`:"No grammar gaps today — try a higher level next time.",tip:(r.items.find(x=>!x.ok)||{}).x||"Keep reading in English to see these patterns in context."}}
+ if(s.kind=="writing")return {strength:r.strengths[0]||"Your ideas were clear.",improve:r.errors.length?`Watch your ${[...new Set(r.errors.map(e=>e.type))].slice(0,2).join(" and ")}.`:"Very accurate writing.",tip:r.comment||"Re-read your text once for grammar before you finish."};
+ const p=r.max?r.score/r.max:0;return {strength:p>=.6?`You understood most of the ${s.kind} task, ${n}.`:`You tried every question, ${n}.`,improve:r.wrong&&r.wrong.length?`Check details like: ${r.wrong[0]}`:"Keep practising at this level.",tip:s.kind=="listening"?"Read the questions before you listen and underline key words.":"Find the key word in the question, then look for it in the text."}};
+const fbBox=(f,name)=>`<div class="fbmini"><h3>Feedback for ${esc(name)}</h3><div class="fbg"><div><b>💪 Strength</b><p>${esc(f.strength)}</p></div><div><b>🎯 To improve</b><p>${esc(f.improve)}</p></div><div><b>💡 Tip</b><p>${esc(f.tip)}</p></div></div><div class="row" style="margin-top:8px"><button data-fbcopy>Copy feedback</button><button data-fbsay>🔊 Read aloud</button></div></div>`;
+const sectionFeedback=async s=>{const box=$("secFb");if(!box||!s.res)return;const name=st.cur.name.split(" ")[0];
+ const paint=()=>{const b=$("secFb");if(!b)return;b.innerHTML=fbBox(s.res.fb,name);const txt=`${st.cur.name} – ${SK[s.kind][1]}\nStrength: ${s.res.fb.strength}\nTo improve: ${s.res.fb.improve}\nTip: ${s.res.fb.tip}`;
+  b.querySelector("[data-fbcopy]").onclick=()=>copy(txt);b.querySelector("[data-fbsay]").onclick=()=>speak(`${s.res.fb.strength} ${s.res.fb.improve} ${s.res.fb.tip}`)};
+ if(s.res.fb){paint();return}
+ box.innerHTML=`<div class="fbmini"><h3>Feedback for ${esc(name)}</h3><p style="margin:0;color:var(--soft)"><span class="spin"></span> Writing personalised feedback…</p></div>`;
+ try{const r=await askJSON(`You are ${st.cur.name}'s English teacher. Write SHORT personalised feedback right after the ${SK[s.kind][1]} activity.
+${studentCtx(st.cur)} Category: ${CATS[st.sess.cat]}.
+Evidence: ${fbEvidence(s)}
+Return ONLY JSON: {"strength": one specific sentence about what they did well, "improve": one specific sentence about the main thing to work on, "tip": one practical tip or mini-rule (max 25 words)${s.kind=="grammar"?", explaining the key grammar concept they missed":""}}.
+Speak to the student as "you". Use simple English suitable for ${s.res.level||st.cur.level}.`);
+  s.res.fb={strength:String(r.strength||""),improve:String(r.improve||""),tip:String(r.tip||"")};if(!s.res.fb.strength)throw 0}
+ catch(e){s.res.fb=localFb(s)}
+ paint()};
+
+/* ---------- speaking task ---------- */
+const T=()=>st.sess.tasks[st.sess.i];
+const openTask=i=>{stopAll();st.sess.i=i;const t=T();
+ $("prog").innerHTML=st.sess.tasks.map((x,j)=>`<span class="pd ${j==i?"cur":x.res?"done":""}" title="Question ${j+1}"></span>`).join("")+`<span class="tag">Question ${i+1} of ${st.sess.tasks.length}</span>`;
+ $("tE").textContent=t.e;$("tCat").textContent=t.c;$("tQ").textContent=t.q;
+ $("ans").value=t.a;$("partial").textContent="";elapsed=0;prepLeft=t.prep||0;drawClock();
+ setMode(t.mode||(dict?mode:"type"),dict?"":"Voice typing isn't available here (it works in Chrome or the Claude desktop app). Type the answer instead.");updMeta();renderRate();
+ $("aiOut").innerHTML=t.res?resultHTML(t):"";bindResult();
+ $("nextBtn").textContent=i<st.sess.tasks.length-1?"Next question →":"Finish speaking →";show("task")};
+const rateBtns=k=>[1,2,3,4,5].map(n=>`<button data-r="${k}" data-n="${n}" class="${T()[k]==n?"on":""}" aria-label="${k=="pron"?"Pronunciation":"Fluency"} ${n} of 5">${n}</button>`).join("");
+const renderRate=()=>{$("rPron").innerHTML=rateBtns("pron");$("rFlu").innerHTML=rateBtns("flu")};
+document.querySelector(".rate").onclick=e=>{const b=e.target.closest("[data-r]");if(!b)return;const t=T();t[b.dataset.r]=t[b.dataset.r]==+b.dataset.n?0:+b.dataset.n;renderRate()};
+const FILLERS=/\b(um+|uh+|erm|er|like|you know|i mean|basically|actually)\b/gi;
+const updMeta=()=>{const v=$("ans").value;if(st.sess&&T())T().a=v;const w=(v.trim().match(/\S+/g)||[]).length;$("wc").textContent=`${w} word${w==1?"":"s"}`;
+ const f=(v.match(FILLERS)||[]).length;$("fill").textContent=f&&mode=="speak"?`${f} filler word${f==1?"":"s"} (um, like, you know…)`:""};
+$("ans").oninput=updMeta;
+$("toStudent").onclick=goHome;
+const endSpeaking=()=>{stopAll();const sec=st.sess.sections[st.sess.si];const done=st.sess.tasks.filter(t=>t.res);
+ if(done.length){const lv=done.map(t=>li(t.res.cefr)),avgL=Math.round(lv.reduce((a,b)=>a+b,0)/lv.length);
+  const ib=done.filter(t=>t.res.ielts).map(t=>t.res.ielts);const pron=avg(done.map(t=>t.pron).filter(Boolean));
+  const pb=pron?[0,4,5,6,7,8][Math.round(pron)]:0;
+  const band=st.sess.cat=="ielts"&&ib.length?r5((avg(ib.map(x=>x.fc))+avg(ib.map(x=>x.lr))+avg(ib.map(x=>x.gra))+(pb||avg(ib.map(x=>x.fc))))/4):0;
+  sec.res={level:LV[avgL],score:done.length,max:st.sess.tasks.length,band,ielts:ib.length?{fc:r5(avg(ib.map(x=>x.fc))),lr:r5(avg(ib.map(x=>x.lr))),gra:r5(avg(ib.map(x=>x.gra))),p:pb}:null}
+  speakSummary(sec);return}
+ nextSection()};
+const speakSummary=s=>{const r=s.res,done=st.sess.tasks.filter(t=>t.res);
+ $("secSheet").innerHTML=secHead(s,"Speaking complete.")+`<div class="resline"><span class="cefr">${esc(r.level)}</span><div><b>${r.score} answer${r.score==1?"":"s"} marked</b>${r.band?` · IELTS band ≈ <b>${r.band}</b>`:""}<div style="color:var(--soft);font-weight:600">Estimated speaking level</div></div></div>
+ <div class="review">${done.map((t,i)=>`<div class="rv2"><div class="rvh"><span class="tag">${esc(t.res.cefr)}</span><b>${i+1}. ${esc(t.q)}</b></div><div class="marked" style="font-size:17px;margin:6px 0 0">${diffHTML(t.a,t.res.corrected)}</div></div>`).join("")}</div>
+ <div id="secFb"></div><div class="row" style="margin-top:18px"><button class="pri" id="secNext">Continue →</button></div>`;
+ bindHead();$("secSkip").hidden=true;$("secNext").onclick=nextSection;show("sec");sectionFeedback(s)};
+$("nextBtn").onclick=()=>{if(st.sess.i<st.sess.tasks.length-1)openTask(st.sess.i+1);else endSpeaking()};
+$("finishBtn").onclick=endSpeaking;
+$("readQ").onclick=()=>speak(T().q);
+
+/* timer (+ IELTS prep) */
+let elapsed=0,tick=null,prepLeft=0;
+const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+const drawClock=()=>{const t=T();if(!t)return;if(prepLeft>0){$("clock").firstChild.textContent="Prep "+fmt(prepLeft)+" ";$("target").textContent="then speak "+fmt(t.sec);$("barFill").style.width="0%"}
+ else{$("clock").firstChild.textContent=fmt(elapsed)+" ";$("target").textContent="/ "+fmt(t.sec);$("barFill").style.width=Math.min(100,elapsed/t.sec*100)+"%"}
+ $("timerBtn").textContent=tick?"Pause timer":prepLeft>0?"Start 1-min preparation":elapsed?"Resume timer":"Start timer"};
+const startT=()=>{if(tick)return;tick=setInterval(()=>{if(prepLeft>0){prepLeft--;if(!prepLeft){toast("Preparation over — start speaking!");speak("Please start speaking now.")}}else elapsed++;drawClock()},1000);drawClock()};
+const stopT=()=>{clearInterval(tick);tick=null;if(st.sess&&st.sess.tasks&&st.sess.tasks[st.sess.i]&&$("task").classList.contains("on"))drawClock()};
+$("timerBtn").onclick=()=>tick?stopT():startT();
+
+/* answer mode + dictation */
+let mode="speak",listening=false,heard=false,hearT=null,dictTarget=null;
+const setMode=(m,why)=>{mode=m;const task=$("task").querySelector(".sheet");task.classList.toggle("typebox",m=="type");
+ $("mSpeak").classList.toggle("on",m=="speak");$("mType").classList.toggle("on",m=="type");if(st.sess&&T())T().mode=m;
+ $("ansLabel").innerHTML=m=="type"?'Type the answer <span style="color:var(--soft);font-weight:600">(the student types their sentences, or you type what they said)</span>':'What the student said <span style="color:var(--soft);font-weight:600">(voice typing fills this in — edit it if the transcript is wrong)</span>';
+ $("ans").placeholder=m=="type"?"Type the answer here, sentence by sentence…":"Press the red microphone and let the student speak, or type / paste their answer here…";
+ if(st.sess&&T()){const t=T();$("tHint").textContent=m=="type"?"Write 4–6 full sentences. Give reasons and examples.":t.prep?`You have 1 minute to prepare, then speak for up to ${fmt(t.sec)}.`:li(st.sess.lvl)<1?`Answer in short, full sentences (about ${fmt(t.sec)}).`:li(st.sess.lvl)<2?`Speak for about ${fmt(t.sec)}. Use full sentences and give one detail.`:li(st.sess.lvl)<4?`Aim for about ${fmt(t.sec)} of speaking. Give reasons and examples.`:`Aim for about ${fmt(t.sec)}. Develop your ideas, give examples and consider other views.`}
+ if(why){$("micNote").hidden=false;$("micNote").textContent=why}else $("micNote").hidden=true;
+ if(m=="type"){stopAll();setTimeout(()=>$("ans").focus(),50)}};
+$("mSpeak").onclick=()=>{if(!dict){setMode("type","Voice typing isn't available here (it works in Chrome or the Claude desktop app). Type the answer instead.");return}setMode("speak")};
+$("mType").onclick=()=>setMode("type");
+const setupDictation=()=>{if(!dict){if($("task").classList.contains("on"))setMode("type","Voice typing isn't available here (it works in Chrome or the Claude desktop app). Type the answer instead.");return}
+ dict.onPartial(({text})=>{heard=true;$("partial").textContent=text});
+ dict.onFinal(({text})=>{heard=true;const a=dictTarget&&document.body.contains(dictTarget)?dictTarget:$("ans");a.value=(a.value.trim()?a.value.trim()+" ":"")+text.trim();$("partial").textContent="";a.dispatchEvent(new Event("input"))});
+ dict.onState(({state})=>{listening=state=="listening";$("micBtn").classList.toggle("live",listening);$("micBtn").setAttribute("aria-label",listening?"Stop voice typing":"Start voice typing");if(!listening){stopT();clearTimeout(hearT);dictTarget=null;document.querySelectorAll(".omic").forEach(b=>b.textContent="🎙️ Speak this answer")}})};
+$("micBtn").onclick=()=>{dictTarget=null;if(!dict){setMode("type","Voice typing isn't available here. Type the answer instead.");return}if(listening){dict.stop().catch(()=>{});return}
+ heard=false;clearTimeout(hearT);prepLeft=0;
+ dict.start().catch(e=>{stopT();setMode("type",e&&e.code=="not_granted"?"Microphone access was declined, so typing is on. Type the answer here.":"The microphone couldn't start, so typing is on. Type the answer here.")});startT();
+ hearT=setTimeout(()=>{if(!heard&&listening){dict.stop().catch(()=>{});setMode("type","No speech was heard, so typing is on. Type the answer here — or press 🎙️ Speak to try again.")}},12000)};
+const stopAll=()=>{clearInterval(tick);tick=null;if(dict&&listening)dict.stop().catch(()=>{});if(ctrl)ctrl.abort();stopPlay();clearInterval(wTick);wTick=null};
+
+/* speaking correction */
+const corrPrompt=t=>{const ie=st.sess.cat=="ielts";return `You are an experienced, encouraging ESL teacher${ie?" and IELTS speaking examiner":""} assessing an ADULT learner's ${t.mode=="type"?"WRITTEN (typed)":"SPOKEN"} answer.
+${studentCtx(st.cur)}
+Category: ${CATS[st.sess.cat]}. Question${t.c?" ("+t.c+")":""}: "${t.q}"
+${t.mode=="type"?"Answer (TYPED by the student, so also correct spelling; be lenient with punctuation):":"Transcript (from speech-to-text, so IGNORE missing punctuation, capital letters and obvious transcription glitches; do not count them as errors):"}
+"""${t.a.slice(0,4000)}"""
+Return ONLY a JSON object:
+{"corrected": the transcript with MINIMAL corrections so it is grammatical and natural; keep the student's words and ideas; add punctuation,
+ "errors": array (max 8, most important first) of {"original": exact words from the transcript, "correction": string, "type": one of "grammar","tense","article","preposition","word choice","word order","vocabulary","agreement","collocation","spelling","other", "why": why this part is wrong (max 18 words, clear for a ${st.sess.lvl} learner), "how": how to correct it — the rule or pattern to use (max 18 words)},
+ "upgrades": array (max 4) of {"from": basic word/phrase they used, "to": better alternative, "why": max 12 words},
+ "strengths": 2 short, specific things they did well,
+ "scores": {"grammar":1-5,"vocabulary":1-5,"coherence":1-5,"task":1-5},
+ "cefr": CEFR level of this answer,
+ ${ie?'"ielts": {"fc": Fluency & Coherence band, "lr": Lexical Resource band, "gra": Grammatical Range & Accuracy band} (0-9 in 0.5 steps; judge from the words only),':""}
+ "better": the same ideas one level higher, natural spoken English, max 90 words,
+ "comment": one encouraging sentence with the most useful next step}
+${st.cur.lang?`Mention when an error is typical for ${st.cur.lang} speakers.`:""} If the answer is very short, say so in "comment".`};
+$("checkBtn").onclick=async()=>{const t=T();updMeta();if((t.a.trim().match(/\S+/g)||[]).length<3){toast("Add the student's answer first.");return}
+ stopAll();ctrl=new AbortController();$("checkBtn").disabled=true;$("aiOut").innerHTML=loading("Marking the answer…");bindCancel();
+ try{const r=await askJSON(corrPrompt(t),ctrl.signal);t.res=normRes(r);$("aiOut").innerHTML=resultHTML(t);bindResult();$("prog").children[st.sess.i].classList.add("done")}
+ catch(e){$("aiOut").innerHTML=`<div class="notice err" style="margin-top:18px">${esc(aiErr(e))}</div>`}
+ finally{$("checkBtn").disabled=false;ctrl=null}};
+const normRes=r=>({corrected:String(r.corrected||""),errors:arr(r.errors).slice(0,8).map(normErr),
+ upgrades:arr(r.upgrades).slice(0,4).map(u=>({from:String(u.from||""),to:String(u.to||""),why:String(u.why||"")})),strengths:arr(r.strengths).slice(0,3).map(String),
+ scores:{grammar:clamp5(r.scores&&r.scores.grammar),vocabulary:clamp5(r.scores&&r.scores.vocabulary),coherence:clamp5(r.scores&&r.scores.coherence),task:clamp5(r.scores&&r.scores.task)},
+ cefr:String(r.cefr||"").slice(0,4),ielts:r.ielts?{fc:bnd(r.ielts.fc),lr:bnd(r.ielts.lr),gra:bnd(r.ielts.gra)}:null,better:String(r.better||""),comment:String(r.comment||"")});
+const norm=w=>w.toLowerCase().replace(/[^\p{L}\p{N}']/gu,"");
+const diffHTML=(a,b)=>{const A=String(a).trim().split(/\s+/).filter(Boolean),B=String(b).trim().split(/\s+/).filter(Boolean),n=A.length,m=B.length;
+ if(!m)return esc(a);if(n*m>400000)return esc(b);
+ const L=Array.from({length:n+1},()=>new Int32Array(m+1));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=norm(A[i])&&norm(A[i])==norm(B[j])?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+ const out=[];let i=0,j=0,del=[],ins=[];const flush=()=>{if(del.length)out.push(`<del>${esc(del.join(" "))}</del>`);if(ins.length)out.push(`<ins>${esc(ins.join(" "))}</ins>`);del=[];ins=[]};
+ while(i<n||j<m){if(i<n&&j<m&&norm(A[i])&&norm(A[i])==norm(B[j])){flush();out.push(esc(B[j]));i++;j++}else if(j<m&&(i==n||L[i][j+1]>=L[i+1][j])){ins.push(B[j]);j++}else{del.push(A[i]);i++}}
+ flush();return out.join(" ")};
+const resultHTML=t=>{const r=t.res;
+ return `<div style="margin-top:24px"><h3 style="font-size:20px;margin-bottom:6px">Corrected answer</h3><div class="marked">${diffHTML(t.a,r.corrected)}</div>
+ <div class="row"><button data-say="c">🔊 Listen to the corrected answer</button><button data-copy="c">Copy corrected text</button></div>
+ <div class="cols">${errBox(r.errors)}
+  ${r.ielts?scoreBox("IELTS bands",r.cefr,[["Fluency & Coherence",r.ielts.fc,9],["Lexical Resource",r.ielts.lr,9],["Grammatical Range & Accuracy",r.ielts.gra,9]],`<p style="margin:0;font-size:13px;color:var(--soft)">Pronunciation comes from your rating${t.pron?" ("+t.pron+"/5)":""}.</p>`)
+   :scoreBox("Scores",r.cefr,[["Grammar",r.scores.grammar],["Vocabulary",r.scores.vocabulary],["Coherence",r.scores.coherence],["Answered the question",r.scores.task]],t.pron||t.flu?`<div class="sc"><div class="l"><span>Your ratings</span><span>${t.pron?"Pron. "+t.pron+"/5":""} ${t.flu?"· Fluency "+t.flu+"/5":""}</span></div></div>`:'<p style="margin:0;font-size:13px;color:var(--soft)">Rate pronunciation and fluency above — AI can only judge the words.</p>')}
+  ${upBox(r.upgrades,r.strengths,r.comment)}</div>
+ <div class="box" style="margin-top:18px"><h3>Level-up version <button data-say="b" style="min-height:36px">🔊 Listen</button></h3><div class="better">${esc(r.better)}</div></div></div>`};
+const bindResult=()=>{document.querySelectorAll("#aiOut [data-say]").forEach(b=>b.onclick=()=>{const r=T().res;speak(b.dataset.say=="c"?r.corrected:r.better)});
+ document.querySelectorAll("#aiOut [data-copy]").forEach(b=>b.onclick=()=>copy(T().res.corrected))};
+$("followBtn").onclick=async()=>{const t=T();if(!t.a.trim()){toast("Add the student's answer first.");return}const b=$("followBtn");b.disabled=true;b.innerHTML='<span class="spin"></span> Thinking…';
+ try{const r=await askJSON(`You are an ESL speaking teacher${st.sess.cat=="ielts"?" running an IELTS speaking test":""}. ${studentCtx(st.cur)}\nThe student was asked: "${t.q}"\nThey answered: """${t.a.slice(0,3000)}"""\nWrite ONE natural follow-up question that makes them speak more and explain or justify, at their level. Return ONLY JSON: {"q": "the question", "emoji": "one emoji"}`);
+  if(r&&r.q){st.sess.tasks.splice(st.sess.i+1,0,{e:String(r.emoji||"💬").slice(0,4),c:"Follow-up",q:String(r.q),sec:t.sec,a:"",res:null,pron:0,flu:0});toast("Follow-up added as the next question");openTask(st.sess.i)}}
+ catch(e){toast(aiErr(e))}finally{b.disabled=false;b.textContent="Suggest a follow-up question"}};
+
+/* ---------- final report ---------- */
+const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*10)/10:0;
+const overallLevel=skills=>{const v=Object.values(skills).filter(x=>x&&x.level).map(x=>li(x.level)).sort((a,b)=>a-b);if(!v.length)return"";return LV[v[Math.floor((v.length-1)/2)]]};
+const finish=async()=>{stopAll();const S=st.sess,skills={};S.sections.forEach(x=>{if(x.res)skills[x.kind]=x.res});
+ if(!Object.keys(skills).length){toast("Complete at least one section first.");goHome();return}
+ const ie=S.cat=="ielts";const bands=["listening","reading","writing","speaking"].map(k=>skills[k]&&skills[k].band).filter(Boolean);
+ const overallBand=ie&&bands.length?r5(avg(bands)):0;const lvl=overallLevel(skills);
+ show("feedback");$("fbOut").innerHTML=`<div class="sheet"><h2 class="title">Writing ${esc(st.cur.name)}'s report…</h2><p class="lead"><span class="spin"></span> Looking at ${Object.keys(skills).length} skill${Object.keys(skills).length>1?"s":""}${(st.cur.sessions||[]).length?" and earlier sessions":""}.</p></div>`;
+ const prevS=(st.cur.sessions||[]).slice().reverse().find(x=>x.skills);
+ const prev=(st.cur.sessions||[]).slice(-3).map(s=>`- ${s.date.slice(0,10)} (${s.type||"speaking"}): overall ${s.level}${s.skills?"; "+Object.entries(s.skills).map(([k,v])=>k+" "+v.level).join(", "):""}; issues: ${(s.fb&&s.fb.patterns||[]).map(p=>p.issue).join(", ")}`).join("\n");
+ const sp=S.tasks.filter(t=>t.res);const w=skills.writing;
+ const ev=[skills.grammar?`GRAMMAR TEST: ${skills.grammar.score}/${skills.grammar.max}, level ${skills.grammar.level}. Wrong: ${skills.grammar.items.filter(x=>!x.ok).map(x=>x.s.replace("___",x.ans)).join(" | ")}`:"",
+  skills.reading?`READING (${skills.reading.textLevel} text "${skills.reading.title}"): ${skills.reading.score}/${skills.reading.max} → ${skills.reading.level}${skills.reading.band?", band "+skills.reading.band:""}. Missed: ${skills.reading.wrong.join(" | ")}. Written-answer grammar errors: ${(skills.reading.openErrors||[]).join("; ")||"none"}`:"",
+  skills.listening?`LISTENING (${skills.listening.textLevel}): ${skills.listening.score}/${skills.listening.max} → ${skills.listening.level}${skills.listening.band?", band "+skills.listening.band:""}. Missed: ${skills.listening.wrong.join(" | ")}`:"",
+  w?`WRITING (task: ${w.task}) level ${w.cefr}${w.band?", band "+w.band:""}. Errors: ${w.errors.map(e=>`"${e.original}"→"${e.correction}" (${e.type})`).join("; ")}`:"",
+  Object.entries(skills).filter(([k,v])=>v.fb).map(([k,v])=>`Feedback already given after ${k}: ${v.fb.improve}`).join("\n"),
+  sp.length?`SPEAKING level ${skills.speaking?skills.speaking.level:""}${skills.speaking&&skills.speaking.band?", band "+skills.speaking.band:""}:\n`+sp.map((t,i)=>`Q${i+1}: ${t.q}\nSaid: ${t.a.slice(0,1200)}\nErrors: ${t.res.errors.map(e=>`"${e.original}"→"${e.correction}" (${e.type})`).join("; ")||"none"}${t.pron?` · teacher pronunciation ${t.pron}/5`:""}${t.flu?` · fluency ${t.flu}/5`:""}`).join("\n"):""].filter(Boolean).join("\n\n");
+ const prompt=`You are an experienced ESL teacher${ie?" and IELTS examiner":""} writing a PERSONALISED assessment report for an adult learner.
+${studentCtx(st.cur)}
+Assessment: ${TYPES[S.type].n}, category ${CATS[S.cat]}. Overall CEFR (median of skills): ${lvl}${overallBand?`, overall IELTS band ≈ ${overallBand}`:""}.
+${prev?"Previous sessions:\n"+prev:"This is their first recorded assessment."}
+
+Evidence from today:
+${ev}
+
+Return ONLY JSON:
+{"level": overall CEFR today (you may refine e.g. "B1+"),
+ "headline": one sentence summarising the result,
+ "strengths": 3 specific strengths with evidence,
+ "patterns": up to 3 recurring weaknesses, each {"issue": short name, "examples": 1-2 strings "wrong → right" from today, "tip": practical tip, max 20 words},
+ "skillNotes": {${Object.keys(skills).map(k=>`"${k}": one short sentence`).join(", ")}},
+ "focus": recommended course focus for the next month (one sentence),
+ "vocab": up to 5 useful phrases for ${CATS[S.cat]}, each "phrase — short meaning",
+ "actions": exactly 3 concrete action steps for next week,
+ "homework": one short task for next class,
+ "progress": ${prev?"one or two sentences comparing with earlier sessions":"empty string"},
+ "message": a warm, specific note to the student in the second person (3-4 sentences), simple enough for a ${lvl||st.cur.level} learner,
+ "nativeSummary": ${st.cur.bil&&st.cur.lang?`a 2-3 sentence summary written in ${st.cur.lang}`:"empty string"}}
+Be honest and encouraging, based only on the evidence.`;
+ try{const r=await askJSON(prompt);const fb={level:String(r.level||lvl).slice(0,4),headline:String(r.headline||""),strengths:arr(r.strengths).slice(0,3).map(String),
+   patterns:arr(r.patterns).slice(0,3).map(p=>({issue:String(p.issue||""),examples:arr(p.examples).slice(0,2).map(String),tip:String(p.tip||"")})),
+   skillNotes:r.skillNotes&&typeof r.skillNotes=="object"?Object.fromEntries(Object.entries(r.skillNotes).map(([k,v])=>[k,String(v)])):{},focus:String(r.focus||""),
+   vocab:arr(r.vocab).slice(0,5).map(String),actions:arr(r.actions).slice(0,3).map(String),homework:String(r.homework||""),progress:String(r.progress||""),message:String(r.message||""),nativeSummary:String(r.nativeSummary||"")};
+  const slim={};Object.entries(skills).forEach(([k,v])=>slim[k]={level:v.level,score:v.score,max:v.max,band:v.band||0,ielts:v.ielts||null,fb:v.fb||null});
+  const rec={id:S.id,date:S.date,type:S.type,cat:S.cat,level:fb.level,band:overallBand,fb,skills:slim,prevSkills:prevS?prevS.skills:null,
+   writing:w?{task:w.task,text:w.text.slice(0,2500),corrected:w.corrected.slice(0,2800),errors:w.errors.slice(0,8),cefr:w.cefr,ielts:w.ielts}:null,
+   scores:sp.length?{grammar:avg(sp.map(t=>t.res.scores.grammar)),vocabulary:avg(sp.map(t=>t.res.scores.vocabulary)),coherence:avg(sp.map(t=>t.res.scores.coherence)),task:avg(sp.map(t=>t.res.scores.task)),pron:avg(sp.map(t=>t.pron).filter(Boolean)),flu:avg(sp.map(t=>t.flu).filter(Boolean))}:null,
+   tasks:sp.map(t=>({q:t.q,a:t.a.slice(0,1200),corrected:t.res.corrected.slice(0,1400),errors:t.res.errors.slice(0,6),cefr:t.res.cefr}))};
+  st.cur.sessions=(st.cur.sessions||[]).concat(rec).slice(-15);if(S.type=="placement"&&LV.includes(fb.level.slice(0,2)))st.cur.level=fb.level.slice(0,2);
+  persist(st.cur);renderFeedback(rec,false)}
+ catch(e){$("fbOut").innerHTML=`<div class="sheet"><h2 class="title">Couldn't write the report</h2><div class="notice err">${esc(aiErr(e))}</div><div class="row"><button class="pri" id="retryFb">Try again</button></div></div>`;$("retryFb").onclick=finish}};
+
+const ladder=(lvl,prevL)=>`<div class="ladder">${LV.map((l,i)=>`<i class="${i<li(lvl)?"f":i==li(lvl)?"cur":""}" title="${l}">${l}</i>`).join("")}</div>`;
+const scoreRow=(k,v)=>v?`<div class="sc"><div class="l"><span>${k}</span><span>${v}/5</span></div>${dots(Math.round(v))}</div>`:"";
+const renderFeedback=(rec,fromHist)=>{const f=rec.fb,stu=st.cur,ie=rec.cat=="ielts",sk=rec.skills||{};
+ const order=["grammar","reading","listening","writing","speaking"].filter(k=>sk[k]);
+ const prof=order.length?`<div class="sheet"><h3 style="font-size:20px;margin-bottom:12px">Skill profile</h3><div class="prof">${order.map(k=>{const v=sk[k],p=rec.prevSkills&&rec.prevSkills[k];
+  return `<div class="pr"><b>${SK[k][0]} ${esc(SK[k][1])}</b>${ladder(v.level)}<span class="v">${esc(v.level)}${v.band?` · ${v.band}`:""}<small>${k=="writing"?"AI-marked":k=="speaking"?v.score+" answers":v.score+"/"+v.max}${p?` · was ${esc(p.level)}`:""}</small></span></div>${v.fb?`<div class="prfb">💪 ${esc(v.fb.strength)} · 🎯 ${esc(v.fb.improve)}</div>`:f.skillNotes&&f.skillNotes[k]?`<div class="prfb">${esc(f.skillNotes[k])}</div>`:""}`}).join("")}</div>
+  ${ie&&rec.band?`<p style="margin:14px 0 0;font-weight:800">Overall IELTS band ≈ ${rec.band} <span style="color:var(--soft);font-weight:600">(AI and practice-test estimate, not an official score)</span></p>`:""}</div>`:"";
+ const s=rec.scores||{};
+ $("fbOut").innerHTML=`<div class="sheet"><div class="fbhead"><div class="stamp"><div><b>${esc(ie&&rec.band?rec.band:f.level||"–")}</b><small>${ie&&rec.band?"IELTS band":"overall level"}</small></div></div>
+  <div><span class="tag">${esc(new Date(rec.date).toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"long",year:"numeric"}))} · ${esc(TYPES[rec.type]?TYPES[rec.type].n:"Speaking session")} · ${esc(CATS[rec.cat]||"")}</span>
+  <h2 style="margin-top:8px">${esc(stu.name)}: ${esc(f.headline)}</h2>${f.progress?`<p class="lead" style="margin:8px 0 0">📈 ${esc(f.progress)}</p>`:""}${f.focus?`<p style="margin:8px 0 0;font-weight:700">Recommended focus: ${esc(f.focus)}</p>`:""}</div></div></div>
+ ${prof}
+ <div class="cols" style="margin-top:0">
+  <div class="sheet" style="margin:0"><h3 style="font-size:20px;margin-bottom:10px">💪 Strengths</h3><ul style="margin:0;padding-left:1.2em">${f.strengths.map(x=>`<li style="margin:6px 0">${esc(x)}</li>`).join("")}</ul></div>
+  <div class="sheet" style="margin:0"><h3 style="font-size:20px;margin-bottom:10px">🎯 To work on</h3>${f.patterns.map(p=>`<div class="pat"><h3>${esc(p.issue)}</h3>${p.examples.map(x=>`<div class="ex">${esc(x)}</div>`).join("")}<p>${esc(p.tip)}</p></div>`).join("")||"<p>No recurring problems today.</p>"}</div>
+ </div>
+ <div class="cols">
+  ${s.grammar?`<div class="sheet" style="margin:0"><h3 style="font-size:20px;margin-bottom:10px">Speaking scores (average)</h3><div class="scores">${scoreRow("Grammar",s.grammar)}${scoreRow("Vocabulary",s.vocabulary)}${scoreRow("Coherence",s.coherence)}${scoreRow("Answered the question",s.task)}${scoreRow("Pronunciation (teacher)",s.pron)}${scoreRow("Fluency (teacher)",s.flu)}</div></div>`:""}
+  <div class="sheet" style="margin:0"><h3 style="font-size:20px;margin-bottom:10px">Next steps</h3><ol class="act">${f.actions.map(a=>`<li>${esc(a)}</li>`).join("")}</ol>${f.homework?`<p style="margin:12px 0 0"><b>Homework:</b> ${esc(f.homework)}</p>`:""}</div>
+ </div>
+ ${f.vocab.length?`<div class="sheet" style="margin-top:18px"><h3 style="font-size:20px;margin-bottom:8px">Useful phrases · ${esc(CATS[rec.cat]||"")}</h3>${f.vocab.map(v=>`<div class="up"><mark>${esc(v.split(" — ")[0])}</mark>${v.includes(" — ")?` — ${esc(v.split(" — ").slice(1).join(" — "))}`:""}</div>`).join("")}</div>`:""}
+ <div class="sheet" style="margin-top:18px"><h3 style="font-size:20px;margin-bottom:8px">Note for ${esc(stu.name)}</h3><div class="letter">${esc(f.message)}</div>${f.nativeSummary?`<div class="letter" style="margin-top:12px;color:var(--soft)">${esc(f.nativeSummary)}</div>`:""}<div class="sig">— Teacher</div></div>
+ ${rec.writing?`<div class="sheet"><h3 style="font-size:20px;margin-bottom:8px">Writing</h3><p style="margin:0 0 8px;color:var(--soft)">${esc(rec.writing.task)}</p><div class="marked" style="font-size:18px">${diffHTML(rec.writing.text,rec.writing.corrected)}</div></div>`:""}
+ ${(rec.tasks||[]).length?`<div class="sheet"><h3 style="font-size:20px;margin-bottom:8px">Speaking answers</h3>${rec.tasks.map((t,i)=>`<details style="border-top:1px solid var(--line);padding:10px 0"><summary style="font-weight:800;cursor:pointer">${i+1}. ${esc(t.q)} <span class="tag">${esc(t.cefr)}</span></summary><div class="marked" style="font-size:18px">${diffHTML(t.a,t.corrected)}</div>${(t.errors||[]).map(errCard).join("")}</details>`).join("")}</div>`:""}
+ <div class="row" style="margin-bottom:30px"><button class="pri" id="cpStudent">Copy report for the student</button><button id="cpTeacher">Copy full teacher report</button><button id="hearNote">🔊 Read the note aloud</button><button id="backStu">${fromHist?"← Back":"Done — back to home"}</button></div>`;
+ const skTxt=order.map(k=>`• ${SK[k][1]}: ${sk[k].level}${sk[k].band?" (band "+sk[k].band+")":""}${k!="writing"&&k!="speaking"?` – ${sk[k].score}/${sk[k].max}`:""}`).join("\n");
+ $("cpStudent").onclick=()=>copy(`${stu.name} – ${TYPES[rec.type]?TYPES[rec.type].n:"Assessment"} (${CATS[rec.cat]||""}) – ${rec.date.slice(0,10)}\nOverall level: ${f.level}${rec.band?" · IELTS band ≈ "+rec.band:""}\n${skTxt}\n\n${f.message}\n\nStrengths:\n${f.strengths.map(x=>"• "+x).join("\n")}\n\nTo work on:\n${f.patterns.map(p=>`• ${p.issue}: ${p.examples.join("; ")} — ${p.tip}`).join("\n")}\n\nUseful phrases:\n${f.vocab.map(x=>"• "+x).join("\n")}\n\nNext steps:\n${f.actions.map((x,i)=>`${i+1}. ${x}`).join("\n")}\n\nHomework: ${f.homework}${f.nativeSummary?"\n\n"+f.nativeSummary:""}`);
+ $("cpTeacher").onclick=()=>copy(`TEACHER REPORT – ${stu.name} (${CATS[stu.goal]}, ${stu.lang||"L1 n/a"}) – ${rec.date.slice(0,10)}\n${TYPES[rec.type]?TYPES[rec.type].n:""} · ${CATS[rec.cat]||""}\nOverall: ${f.level}${rec.band?" · IELTS ≈ "+rec.band:""}\n${f.headline}\n${f.progress?"Progress: "+f.progress+"\n":""}Focus: ${f.focus}\n\nSKILLS\n${order.map(k=>`• ${SK[k][1]}: ${sk[k].level}${sk[k].band?" (band "+sk[k].band+")":""}${k!="writing"&&k!="speaking"?` – ${sk[k].score}/${sk[k].max}`:""}${f.skillNotes[k]?" – "+f.skillNotes[k]:""}`).join("\n")}\n\nStrengths:\n${f.strengths.map(x=>"• "+x).join("\n")}\n\nPatterns:\n${f.patterns.map(p=>`• ${p.issue}: ${p.examples.join("; ")} — ${p.tip}`).join("\n")}\n\nActions:\n${f.actions.map((x,i)=>`${i+1}. ${x}`).join("\n")}\nHomework: ${f.homework}${rec.writing?`\n\nWRITING\nTask: ${rec.writing.task}\nStudent: ${rec.writing.text}\nCorrected: ${rec.writing.corrected}`:""}${(rec.tasks||[]).length?`\n\nSPEAKING\n${rec.tasks.map((t,i)=>`${i+1}. ${t.q} [${t.cefr}]\nSaid: ${t.a}\nCorrected: ${t.corrected}`).join("\n\n")}`:""}`);
+ $("hearNote").onclick=()=>speak(f.message);$("backStu").onclick=goHome;show("feedback")};
+
+renderBuilder();initStore();
+}
+</script>
+</body>
+</html>

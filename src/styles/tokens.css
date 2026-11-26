@@ -1,0 +1,38 @@
+/* Design tokens — the single source for colours, type and shape.
+   Matches the Sentence Builders artifact. Always light: the app ignores dark mode. */
+:root {
+  color-scheme: light;
+  /* page and surfaces */
+  --bg: #fff8ea;
+  --bg2: #fdf1f6;
+  --card: #ffffff;
+  --chip: #eef4ff;
+  --line: #e3eaf7;
+  --ink: #14213d;
+  --soft: #5a6b8c;
+  /* actions */
+  --sun: #ffd23f;      /* main buttons, dark text on top */
+  --sun-ink: #3a2a00;
+  --mint: #2fd08a;     /* "Said it!" button, correct answers */
+  --coral: #e03131;
+  --plan: #7c4ddb;     /* course plan accents */
+  /* sentence parts (colourful semantics) — white text is readable on all of these */
+  --who: #e8590c;
+  --doing: #b8860b;
+  --what: #1e9e50;
+  --where: #2f6fe0;
+  --why: #7c4ddb;
+  --when: #e03131;
+  --link: #55657e;     /* joining words */
+  --answer: #1b8a4a;
+  --size: #0c8599;
+  --num: #0c8599;
+  --colour: #d6336c;
+  /* shape and type */
+  --radius-card: 28px;
+  --radius-btn: 999px;
+  --font-head: "Baloo 2", Nunito, sans-serif;
+  --font-body: Nunito, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --shadow-card: 0 6px 0 rgba(20, 33, 61, .08), 0 14px 34px rgba(20, 33, 61, .08);
+  --sidebar-w: 260px;
+}
